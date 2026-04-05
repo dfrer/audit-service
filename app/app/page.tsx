@@ -1,5 +1,7 @@
 import PricingSection from "@/components/PricingSection";
 import FAQSection from "@/components/FAQSection";
+import AsciiBackground from "@/components/AsciiBackground";
+import ShoggothCanvas from "@/components/ShoggothCanvas";
 
 const PILLARS = [
   { num: "01", label: "Business AI Operations", desc: "Tool sprawl, cost leakage, workflow gaps, privacy risk" },
@@ -48,7 +50,7 @@ const TEXT_MUTED = "var(--text-muted)";
 
 function Diamond({ className, style: s }: { className?: string; style?: React.CSSProperties }) {
   return (
-    <svg className={className} viewBox="0 0 12 12" fill="currentColor" style={{ color: "var(--accent-dim)", ...s }}>
+    <svg className={`w-2.5 h-2.5 shrink-0 ${className || ""}`} viewBox="0 0 12 12" fill="currentColor" style={{ color: "var(--accent-dim)", ...s }}>
       <path d="M6 0L12 6L6 12L0 6Z" />
     </svg>
   );
@@ -68,7 +70,9 @@ function NavPill({ href, children }: { href: string; children: React.ReactNode }
 
 export default function Home() {
   return (
-    <div className="min-h-screen" style={{ background: BG }}>
+    <div className="min-h-screen relative" style={{ background: BG }}>
+      <AsciiBackground opacity={0.9} zIndex={0} />
+      <ShoggothCanvas />
 
       {/* NAV */}
       <nav className="sticky top-0 z-50 border-b" style={{ borderColor: BORDER, background: "rgba(12,12,12,0.85)", backdropFilter: "blur(16px)" }}>
@@ -91,7 +95,7 @@ export default function Home() {
 
       {/* HERO */}
       <section className="mx-auto max-w-6xl px-6 pt-32 pb-24 sm:pt-40">
-        <div className="max-w-3xl">
+        <div className="max-w-xl">
           <div className="mono-sm mb-6 flex items-center gap-2" style={{ color: ACCENT_DIM }}>
             <Diamond />
             AI AUDIT SERVICE
@@ -101,17 +105,20 @@ export default function Home() {
             <br />
             <span style={{ color: ACCENT }}>Is it actually working?</span>
           </h1>
-          <p className="mt-6 max-w-xl text-base leading-relaxed" style={{ color: TEXT_SEC }}>
+          <p className="mt-6 text-base leading-relaxed" style={{ color: TEXT_SEC }}>
             A practical audit of how you or your team actually uses AI --
             what is working, what is bleeding money, what is quietly broken,
             and what to fix first. Fixed price. No fluff.
           </p>
           <div className="mt-10 flex flex-wrap gap-3">
-            <a href="#pricing"
-               className="px-6 py-3 text-sm mono font-medium rounded transition-opacity hover:opacity-85"
-               style={{ background: ACCENT, color: BG }}>
-              GET AN AUDIT
-            </a>
+            {/* PRIMARY CTA TENDRIL ANCHOR */}
+            <div data-shoggoth="cta-primary" className="contents">
+              <a href="#pricing"
+                 className="px-6 py-3 text-sm mono font-medium rounded transition-opacity hover:opacity-85"
+                 style={{ background: ACCENT, color: BG }}>
+                GET AN AUDIT
+              </a>
+            </div>
             <a href="#diagnose"
                className="px-6 py-3 text-sm mono font-medium rounded border transition-colors hover:text-zinc-100"
                style={{ borderColor: BORDER, color: TEXT_SEC }}>
@@ -120,10 +127,10 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Stats grid */}
+        {/* STATS */}
         <div className="mt-20 grid grid-cols-2 sm:grid-cols-4 gap-px" style={{ background: BORDER }}>
-          {STATS.map((s) => (
-            <div key={s.label} className="px-6 py-5" style={{ background: SURFACE }}>
+          {STATS.map((s, i) => (
+            <div key={s.label} data-shoggoth={`stat-${i}`} className="px-6 py-5" style={{ background: SURFACE }}>
               <div className="text-2xl font-bold mono" style={{ color: ACCENT }}>{s.val}</div>
               <div className="text-xs mono mt-1" style={{ color: TEXT_MUTED }}>{s.label}</div>
             </div>
@@ -144,7 +151,7 @@ export default function Home() {
           </p>
           <div className="grid gap-4 sm:grid-cols-2">
             {PILLARS.map((p) => (
-              <div key={p.num}
+              <div key={p.num} data-shoggoth={`diagnose-${p.num.slice(0, 1)}`}
                    className="border rounded-lg px-6 py-5 transition-colors"
                    style={{ borderColor: BORDER, background: SURFACE }}>
                 <div className="flex items-start gap-4">
@@ -168,8 +175,8 @@ export default function Home() {
           </div>
           <h2 className="text-2xl font-semibold tracking-tight mb-12" style={{ color: TEXT }}>Three steps to clarity</h2>
           <div className="grid gap-px sm:grid-cols-3" style={{ background: BORDER }}>
-            {STEPS.map((s) => (
-              <div key={s.step} className="px-8 py-10" style={{ background: SURFACE }}>
+            {STEPS.map((s, i) => (
+              <div key={s.step} data-shoggoth={`step-${i}`} className="px-8 py-10" style={{ background: SURFACE }}>
                 <div className="mono-sm mb-4" style={{ color: ACCENT }}>{s.step}</div>
                 <h3 className="text-sm font-medium mb-2" style={{ color: TEXT }}>{s.title}</h3>
                 <p className="text-xs leading-relaxed" style={{ color: TEXT_MUTED }}>{s.desc}</p>
@@ -189,6 +196,7 @@ export default function Home() {
           <p className="max-w-xl text-sm leading-relaxed mb-12" style={{ color: TEXT_SEC }}>
             No hourly billing. No surprise invoices. You know the cost before you start.
           </p>
+          {/* Pricing cards get data-shoggoth attributes from inside PricingSection -- we pass it through */}
           <PricingSection />
         </div>
       </section>
@@ -201,8 +209,8 @@ export default function Home() {
           </div>
           <h2 className="text-2xl font-semibold tracking-tight mb-12" style={{ color: TEXT }}>Built for people who use AI, not sell it</h2>
           <div className="grid gap-4 sm:grid-cols-3">
-            {WHY.map((item) => (
-              <div key={item.title} className="border rounded-lg px-6 py-6" style={{ borderColor: BORDER, background: SURFACE }}>
+            {WHY.map((item, i) => (
+              <div key={item.title} data-shoggoth={`why-${i}`} className="border rounded-lg px-6 py-6" style={{ borderColor: BORDER, background: SURFACE }}>
                 <Diamond className="mb-3" />
                 <h3 className="text-sm font-medium mb-2" style={{ color: TEXT }}>{item.title}</h3>
                 <p className="text-xs leading-relaxed" style={{ color: TEXT_MUTED }}>{item.desc}</p>
@@ -219,14 +227,14 @@ export default function Home() {
             <Diamond /> FAQ
           </div>
           <h2 className="text-2xl font-semibold tracking-tight mb-12" style={{ color: TEXT }}>Questions, answered</h2>
-          <div className="max-w-2xl">
+          <div data-shoggoth="faq-section" className="max-w-2xl">
             <FAQSection />
           </div>
         </div>
       </section>
 
       {/* FINAL CTA */}
-      <section className="py-24 relative overflow-hidden" style={{ background: SURFACE }}>
+      <section data-shoggoth="final-cta" className="py-24 relative overflow-hidden" style={{ background: SURFACE }}>
         <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.05, backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 49px, var(--accent) 49px, var(--accent) 50px)", backgroundSize: "100% 50px" }} />
         <div className="mx-auto max-w-6xl px-6 text-center relative z-10">
           <h2 className="text-3xl font-semibold tracking-tight mb-4" style={{ color: TEXT }}>

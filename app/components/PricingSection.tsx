@@ -51,11 +51,12 @@ const TIERS: TierConfig[] = [
 export default function PricingSection() {
   return (
     <div className="grid gap-6 sm:grid-cols-3">
-      {TIERS.map(({ tier, highlight, features, bestFor }) => {
+      {TIERS.map(({ tier, highlight, features, bestFor }, idx) => {
         const config = PACKAGE_CONFIG[tier];
         return (
           <div
             key={tier}
+            data-shoggoth={`pricing-card-${idx}`}
             className="relative flex flex-col rounded-lg border p-6 transition-colors"
             style={{
               borderColor: highlight ? "var(--accent)" : "var(--border)",

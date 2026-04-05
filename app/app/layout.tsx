@@ -1,19 +1,27 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { IBM_Plex_Sans, IBM_Plex_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
-const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
+const ibmSans = IBM_Plex_Sans({ 
+  variable: "--font-ibm-sans", 
+  subsets: ["latin"], 
+  weight: ["300", "400", "500", "600", "700"],
+});
+const ibmMono = IBM_Plex_Mono({ 
+  variable: "--font-ibm-mono", 
+  subsets: ["latin"], 
+  weight: ["300", "400", "500", "600"],
+});
 
 export const metadata: Metadata = {
-  title: "AI Project Audit -- Get a Plan, Not a Lecture",
-  description: "Fixed-price codebase audits for developers who want a clear, prioritized execution plan. 48 hours starting at $75.",
+  title: "AI Audit Service -- Practical audits of how you actually use AI",
+  description: "Fixed-price audits of AI usage across business, personal, local, and dev setups. 48 hours starting at $75.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-white text-zinc-900`}>
+      <body className={`${ibmSans.variable} ${ibmMono.variable} antialiased`} style={{ background: "var(--bg)", color: "var(--text)" }}>
         {children}
       </body>
     </html>
