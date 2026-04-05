@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+.vercel/
+
+# Environment
+.env.local
+.env*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Storage (dev artifacts)
+storage/
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*

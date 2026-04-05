@@ -1,130 +1,144 @@
-import Link from "next/link";
 import PricingSection from "@/components/PricingSection";
 import FAQSection from "@/components/FAQSection";
 
 const CHECKS = [
-  "Dependency inventory & vulnerability scan",
-  "Architecture & structure review",
-  "Prioritized risk list with concrete fixes",
-  "Realistic timeline you can actually follow",
+  { icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z", text: "Dependency inventory and vulnerability scan" },
+  { icon: "M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10", text: "Architecture and structure review" },
+  { icon: "M13 10V3L4 14h7v7l9-11h-7z", text: "Prioritized risk list with concrete fixes" },
+  { icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z", text: "Realistic timeline you can actually follow" },
 ];
+
+function CheckIcon({ d }: { d: string }) {
+  return (
+    <svg className="w-5 h-5 text-zinc-400 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" d={d} />
+    </svg>
+  );
+}
+
+function StepCard({ num, title, desc }: { num: string; title: string; desc: string }) {
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center gap-4">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-sm font-semibold text-zinc-900 ring-1 ring-inset ring-zinc-200">
+          {num}
+        </div>
+        <h3 className="font-medium text-zinc-900">{title}</h3>
+      </div>
+      <p className="text-sm leading-relaxed text-zinc-500 pl-16">{desc}</p>
+    </div>
+  );
+}
 
 export default function Home() {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-white">
+      <style>{`html { scroll-behavior: smooth; }`}</style>
+
       {/* NAV */}
-      <nav className="border-b border-zinc-200 bg-white/80 backdrop-blur sticky top-0 z-50">
-        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-          <span className="font-semibold text-lg tracking-tight">audit<span className="text-zinc-400">.dev</span></span>
-          <div className="flex items-center gap-6 text-sm">
-            <a href="#pricing" className="text-zinc-600 hover:text-zinc-900">Pricing</a>
-            <a href="#faq" className="text-zinc-600 hover:text-zinc-900">FAQ</a>
-            <a href="#pricing" className="px-3 py-1.5 rounded-full bg-zinc-900 text-white text-sm hover:bg-zinc-700 transition-colors">Get an Audit</a>
+      <nav className="sticky top-0 z-50 border-b border-zinc-200/80 bg-white/80 backdrop-blur-xl">
+        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">
+          <a href="/" className="text-lg font-semibold tracking-tight text-zinc-900">
+            audit<span className="text-zinc-400">.dev</span>
+          </a>
+          <div className="flex items-center gap-1">
+            <a href="#how-it-works" className="px-3 py-2 text-sm text-zinc-600 hover:text-zinc-900 transition-colors rounded-md hover:bg-zinc-50">
+              How it works
+            </a>
+            <a href="#pricing" className="px-3 py-2 text-sm text-zinc-600 hover:text-zinc-900 transition-colors rounded-md hover:bg-zinc-50">
+              Pricing
+            </a>
+            <a href="#faq" className="px-3 py-2 text-sm text-zinc-600 hover:text-zinc-900 transition-colors rounded-md hover:bg-zinc-50">
+              FAQ
+            </a>
+            <a
+              href="#pricing"
+              className="ml-2 px-4 py-2 text-sm font-medium text-white bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-colors"
+            >
+              Get an Audit
+            </a>
           </div>
         </div>
       </nav>
 
       {/* HERO */}
-      <section className="max-w-5xl mx-auto px-4 pt-24 pb-20">
-        <div className="max-w-2xl">
-          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight leading-tight">
+      <section className="mx-auto max-w-5xl px-6 pt-24 pb-20 sm:pt-32">
+        <div className="mx-auto max-w-3xl">
+          <h1 className="text-balance text-4xl font-bold tracking-tight text-zinc-900 sm:text-5xl lg:text-6xl">
             Ship with a plan.{" "}
             <span className="text-zinc-400">Stop guessing.</span>
           </h1>
-          <p className="mt-6 text-lg text-zinc-600 leading-relaxed">
-            Send me your repo. I will analyze it, find the risks, and give you a
-            prioritized execution plan with a realistic timeline. Not consulting,
+          <p className="mt-6 max-w-2xl text-lg leading-relaxed text-zinc-600">
+            Send me your repo. I will analyze it, find the risks, and give you a{" "}
+            prioritized execution plan with a realistic timeline. Not consulting,{" "}
             not vague feedback -- a concrete plan you can follow.
           </p>
-          <div className="mt-8 flex flex-wrap gap-3">
+          <div className="mt-10 flex flex-wrap gap-4">
             <a
               href="#pricing"
-              className="px-6 py-3 rounded-full bg-zinc-900 text-white text-sm font-medium hover:bg-zinc-700 transition-colors"
+              className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-colors shadow-sm"
             >
               Get an Audit
             </a>
             <a
-              href="#faq"
-              className="px-6 py-3 rounded-full border border-zinc-200 text-sm font-medium hover:bg-zinc-50 transition-colors"
+              href="#how-it-works"
+              className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-zinc-700 bg-zinc-100 rounded-lg hover:bg-zinc-200 transition-colors"
             >
-              Learn More
+              See how it works
             </a>
           </div>
-          <div className="mt-10 grid grid-cols-2 gap-x-8 gap-y-2 text-sm text-zinc-600">
+          <ul className="mt-14 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
             {CHECKS.map((c) => (
-              <div key={c} className="flex items-start gap-2">
-                <span className="text-green-600 mt-0.5 flex-shrink-0">&#10003;</span>
-                <span>{c}</span>
-              </div>
+              <li key={c.text} className="flex items-start gap-3 text-sm text-zinc-600">
+                <CheckIcon d={c.icon} />
+                <span>{c.text}</span>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       </section>
 
       {/* HOW IT WORKS */}
-      <section className="border-t border-zinc-100 py-16 bg-zinc-50">
-        <div className="max-w-5xl mx-auto px-4">
-          <h2 className="text-2xl font-semibold tracking-tight mb-2">How it works</h2>
-          <p className="text-zinc-500 mb-10">Three steps between &quot;I&rsquo;m stuck&quot; and &quot;I have a plan.&quot;</p>
-          <div className="grid sm:grid-cols-3 gap-8">
-            {[
-              {
-                step: "1",
-                title: "Buy and fill out the intake form",
-                desc: "Pick a package, pay via Stripe, then tell me about your repo, goals, and any constraints.",
-              },
-              {
-                step: "2",
-                title: "I analyze your codebase",
-                desc: "I run a structured audit: dependencies, architecture, security, maintainability. Then I write a report.",
-              },
-              {
-                step: "3",
-                title: "You get a plan",
-                desc: "A PDF report with prioritized findings, recommendations ranked by impact, and a timeline. Scaffold tier includes a PR.",
-              },
-            ].map((item) => (
-              <div key={item.step} className="flex flex-col gap-2">
-                <span className="text-3xl font-bold text-zinc-200">{item.step}</span>
-                <h3 className="font-medium">{item.title}</h3>
-                <p className="text-sm text-zinc-500 leading-relaxed">{item.desc}</p>
-              </div>
-            ))}
+      <section id="how-it-works" className="border-y border-zinc-100 bg-zinc-50/50 py-24">
+        <div className="mx-auto max-w-5xl px-6">
+          <div className="mx-auto max-w-2xl text-center mb-16">
+            <h2 className="text-2xl font-semibold tracking-tight text-zinc-900">How it works</h2>
+            <p className="mt-3 text-zinc-500">Three steps between stuck and a plan.</p>
+          </div>
+          <div className="grid gap-12 sm:grid-cols-3">
+            <StepCard num="1" title="Buy and fill out the intake form" desc="Pick a package, pay via Stripe, then tell me about your repo, goals, and any constraints." />
+            <StepCard num="2" title="I analyze your codebase" desc="I run a structured audit: dependencies, architecture, security, maintainability. Then I write a report." />
+            <StepCard num="3" title="You get a plan" desc="A PDF report with prioritized findings, recommendations ranked by impact, and a timeline. Scaffold tier includes a PR." />
           </div>
         </div>
       </section>
 
       {/* PRICING */}
-      <section id="pricing" className="py-16">
-        <div className="max-w-5xl mx-auto px-4">
-          <h2 className="text-2xl font-semibold tracking-tight mb-2">Pricing</h2>
-          <p className="text-zinc-500 mb-10">Fixed price. Fixed scope. No surprises.</p>
+      <section id="pricing" className="py-24">
+        <div className="mx-auto max-w-5xl px-6">
+          <div className="mx-auto max-w-2xl text-center mb-16">
+            <h2 className="text-2xl font-semibold tracking-tight text-zinc-900">Pricing</h2>
+            <p className="mt-3 text-zinc-500">Fixed price. Fixed scope. No surprises.</p>
+          </div>
           <PricingSection />
         </div>
       </section>
 
       {/* TRUST */}
-      <section className="border-t border-zinc-100 py-16 bg-zinc-50">
-        <div className="max-w-5xl mx-auto px-4">
-          <h2 className="text-2xl font-semibold tracking-tight mb-6">Why this works</h2>
-          <div className="grid sm:grid-cols-3 gap-6">
+      <section className="border-y border-zinc-100 bg-zinc-50/50 py-24">
+        <div className="mx-auto max-w-5xl px-6">
+          <div className="mx-auto max-w-2xl text-center mb-16">
+            <h2 className="text-2xl font-semibold tracking-tight text-zinc-900">Why this works</h2>
+          </div>
+          <div className="grid gap-8 sm:grid-cols-3">
             {[
-              {
-                title: "Fixed price, fixed scope",
-                desc: "You know exactly what you are getting and what it costs before you buy. No hourly billing, no scope creep.",
-              },
-              {
-                title: "Built for developers",
-                desc: "No jargon, no vague &quot;best practices.&quot; You get concrete findings tied to your actual codebase.",
-              },
-              {
-                title: "Fast turnaround",
-                desc: "48 hours for the basic audit, 5 days max for the full scaffold. You won't be waiting weeks.",
-              },
+              { title: "Fixed price, fixed scope", desc: "You know exactly what you are getting and what it costs before you buy. No hourly billing, no scope creep." },
+              { title: "Built for developers", desc: "No jargon, no vague best practices. You get concrete findings tied to your actual codebase." },
+              { title: "Fast turnaround", desc: "48 hours for the basic audit, 5 days max for the full scaffold. You won't be waiting weeks." },
             ].map((item) => (
-              <div key={item.title} className="flex flex-col gap-1">
-                <h3 className="font-medium">{item.title}</h3>
-                <p className="text-sm text-zinc-500 leading-relaxed">{item.desc}</p>
+              <div key={item.title} className="rounded-xl border border-zinc-200 bg-white p-6 transition-shadow hover:shadow-sm">
+                <h3 className="font-medium text-zinc-900">{item.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-zinc-500">{item.desc}</p>
               </div>
             ))}
           </div>
@@ -132,30 +146,36 @@ export default function Home() {
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="py-16">
-        <div className="max-w-3xl mx-auto px-4">
-          <h2 className="text-2xl font-semibold tracking-tight mb-10">Frequently asked questions</h2>
-          <FAQSection />
+      <section id="faq" className="py-24">
+        <div className="mx-auto max-w-5xl px-6">
+          <div className="mx-auto max-w-3xl">
+            <h2 className="text-2xl font-semibold tracking-tight text-zinc-900">Frequently asked questions</h2>
+            <p className="mt-3 text-zinc-500 mb-10">Everything you need to know before getting started.</p>
+            <FAQSection />
+          </div>
         </div>
       </section>
 
       {/* FINAL CTA */}
-      <section className="border-t border-zinc-100 py-16 bg-zinc-50">
-        <div className="max-w-2xl mx-auto px-4 text-center">
-          <h2 className="text-2xl font-semibold tracking-tight mb-3">Ready to stop guessing?</h2>
-          <p className="text-zinc-500 mb-6">Pick a package and have your audit ready in 48 hours.</p>
-          <a
-            href="#pricing"
-            className="inline-block px-8 py-3 rounded-full bg-zinc-900 text-white text-sm font-medium hover:bg-zinc-700 transition-colors"
-          >
+      <section className="bg-zinc-900 py-24 text-white">
+        <div className="mx-auto max-w-5xl px-6 text-center">
+          <h2 className="text-3xl font-semibold tracking-tight">Ready to stop guessing?</h2>
+          <p className="mt-4 text-lg text-zinc-400">Pick a package and have your audit ready in 48 hours.</p>
+          <a href="#pricing" className="mt-8 inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-zinc-900 bg-white rounded-lg hover:bg-zinc-100 transition-colors">
             Get an Audit
           </a>
         </div>
       </section>
 
       {/* FOOTER */}
-      <footer className="border-t border-zinc-200 py-8 text-center text-sm text-zinc-400">
-        <p>&copy; {new Date().getFullYear()} Audit Service. All rights reserved.</p>
+      <footer className="border-t border-zinc-200 bg-white py-8">
+        <div className="mx-auto flex max-w-5xl items-center justify-between px-6">
+          <p className="text-sm text-zinc-500">2026 audit.dev. All rights reserved.</p>
+          <div className="flex items-center gap-6 text-sm text-zinc-500">
+            <a href="/intake" className="hover:text-zinc-900 transition-colors">Intake</a>
+            <a href="/admin/orders" className="hover:text-zinc-900 transition-colors">Admin</a>
+          </div>
+        </div>
       </footer>
     </div>
   );
