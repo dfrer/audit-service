@@ -1,51 +1,74 @@
-// POST /api/stripe-webhook -- handles Stripe webhook events
-// PLACEHOLDER: Requires stripe npm package for real verification
+// POST /api/stripe-webhook -- receives Stripe webhook events
+// Verifies signature, updates order status based on payment events.
+
+import { db } from "@/lib/db/local";
+import { verifyStripeWebhook } from "@/lib/adapters/stripe";
+import { sendEmail } from "@/lib/adapters/email";
+import { PACKAGE_CONFIG, AUDIT_CATEGORY_LABELS } from "@/lib/types/order";
 
 export async function POST(req: Request) {
   try {
-    // PLACEHOLDER: In production, verify the webhook signature:
-    // const sig = req.headers.get("stripe-signature") || "";
-    // const raw = await req.text();
-    // const event = await constructWebhookEvent(raw, sig);
-    // (see lib/adapters/stripe.ts)
+    const rawBody = await req.arrayBuffer();
+    const body = Buffer.from(rawBody);
+    const sig = req.headers.get("stripe-signature") || "";
 
-    const body = await req.json().catch(() => ({}));
-    const eventType = body.type || "unknown";
-
-    console.log(`[Stripe Webhook] Event: ${eventType}`, body.id || "");
+    // Verify the webhook signature
+    let event;
+    try {
+      event = await verifyStripeWebhook(body, sig);
+    } catch (err) {
+      console.error("Webhook signature verification failed:", err);
+      return Response.json({ error: "Invalid signature" }, { status: 400 });
+    }
 
     // Handle checkout.session.completed
-    if (eventType === "checkout.session.completed") {
-      const session = body.data?.object || {};
-      const orderId = session.metadata?.orderId;
-      const customerEmail = session.customer_email;
+    if (event.type === "checkout.session.completed") {
+      const orderId = event.id; // Stripe session ID
+      const paymentIntentId = event.paymentIntentId;
 
-      if (orderId) {
-        // Order is already created via intake or will be created here
-        // In a full implementation, update order status and send confirmation
-        console.log(`[Stripe Webhook] Payment confirmed for order ${orderId}`);
+      // Find order by stripeSessionId
+      const allOrders = await db.findAll();
+      const order = allOrders.find(
+        (o) => o.stripeSessionId === orderId
+      );
+
+      if (!order) {
+        console.warn(`[Webhook] No order found for stripe session: ${orderId}`);
+        return Response.json({ received: true });
       }
 
-      if (customerEmail && !orderId) {
-        // If no order ID, create one from the session metadata
-        console.log(`[Stripe Webhook] New payment from ${customerEmail}, no order ID in metadata`);
-      }
+      // Update order status
+      await db.update(order.id, {
+        status: "payment-confirmed",
+        stripePaymentIntentId: paymentIntentId,
+      });
+
+      // Send payment confirmation email
+      const pkgConfig = PACKAGE_CONFIG[order.packageTier];
+      const catLabel = AUDIT_CATEGORY_LABELS[order.intake!.auditCategory];
+      sendEmail({
+        to: order.intake!.email,
+        subject: `Payment confirmed -- ${pkgConfig.name}`,
+        text: `Hi ${order.intake!.name},\n\nPayment received for your ${pkgConfig.name} (${catLabel}).\n\nOrder ID: ${order.id}\n\nWe will start your audit now. You will be notified when it is ready.`,
+      }).catch(console.error);
     }
 
     // Handle checkout.session.expired
-    if (eventType === "checkout.session.expired") {
-      console.log("[Stripe Webhook] Checkout session expired");
-    }
-
-    // Handle payment_intent.payment_failed
-    if (eventType === "payment_intent.payment_failed") {
-      console.log("[Stripe Webhook] Payment failed");
-      // In production: notify customer, set order status appropriately
+    if (event.type === "checkout.session.expired") {
+      const allOrders = await db.findAll("intake-complete");
+      const session = (await req.clone().json())?.data?.object;
+      if (session?.client_reference_id) {
+        const order = await db.findById(session.client_reference_id);
+        if (order && order.status === "intake-complete") {
+          console.log(`[Webhook] Checkout expired for order: ${order.id}`);
+          // Keep as intake-complete so they can retry
+        }
+      }
     }
 
     return Response.json({ received: true });
   } catch (err) {
-    console.error("[Stripe Webhook] Error:", err);
+    console.error("Webhook handler error:", err);
     return Response.json({ error: "Webhook handler error" }, { status: 500 });
   }
 }

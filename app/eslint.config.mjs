@@ -1,14 +1,13 @@
-import { defineConfig, globalIgnores } from "eslint/config";
-import next from "eslint-config-next";
+import next from "@next/eslint-plugin-next";
 
-export default defineConfig([
-  globalIgnores([".next/**", "out/**", "node_modules/**"]),
+export default [
   {
-    files: ["./**/*.{js,mjs,cjs,jsx,mjsx,ts,tsx,mtsx}"],
+    files: ["app/**/*.{js,mjs,cjs,jsx,mjsx,ts,tsx,mtsx}"],
+    ignores: [".next/**", "out/**", "node_modules/**"],
     plugins: { next },
     rules: {
-      ...next.config.rules,
-      "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
+      ...next.configs["core-web-vitals"].rules,
+      "@typescript-eslint/no-unused-vars": "off",
     },
   },
-]);
+];

@@ -1,82 +1,99 @@
+---
+title: "Service Offers -- AI Audit Service"
+updated: "2026-04-06"
+---
+
 # Service Offers
 
-## Tiers
+## AI Audit Tiers
 
-### Audit Lite — $75
+### AI Audit Lite -- $75
+**For:** Quick diagnostic. "Where am I bleeding time or money?"
 
 **What you get:**
-- Repository analysis and requirements intake
-- Prioritized risk list (security, architecture, dependency, maintainability)
-- Recommended tech stack with rationale
-- Top 10 concrete fixes ranked by impact
-- A realistic 2-week execution plan
+- Tool and usage inventory
+- Top risk and cost findings
+- Prioritized fix list ranked by impact
+- 2-week action plan
+- PDF + Markdown report
 
-**Turnaround:** 48 hours (business days)
+**Turnaround:** 48 hours after intake and payment
 
-**Best for:** Solo devs who need clarity fast. "Am I on the right track?"
+**What it covers:** Any of our 6 audit categories -- business ops, personal workflows, local AI, coding setups, deployment practicality, or general usage.
 
----
+**What you provide:** Honest description of how you use AI, list of tools/platforms, main pain points.
 
-### Audit Standard — $120
-
-**Everything in Audit Lite, plus:**
-- 30-day execution plan with milestones
-- Architecture diagram (Mermaid or drawn)
-- CI/CD baseline recommendations
-- Effort estimates per fix/action item
-- Dependency audit with known vulnerability scan
-
-**Turnaround:** 72 hours (business days)
-
-**Best for:** Small teams or founders planning a serious push. "What exactly should we build, in what order, and how long will it take?"
+**What is NOT included:** Detailed evidence for each finding, effort estimates, implementation support, follow-up window.
 
 ---
 
-### Audit + Scaffold — $150
+### AI Audit Standard -- $120
+**For:** Full picture. "What is broken, what works, what do I do next?"
 
-**Everything in Audit Standard, plus:**
-- One pull request adding repo hygiene:
-  - Linting and formatting configuration
-  - Basic test setup
-  - Deployment-ready skeleton (e.g., Vercel, Docker, or equivalent)
-  - CI/CD workflow (GitHub Actions)
-- A checklist for getting to production
+**What you get:**
+- Everything in Lite, plus:
+- 30-day roadmap with milestones
+- Workflow and integration map
+- Effort estimates per action item
+- Cost and vendor dependency analysis
+- Privacy and data handling review
+- Detailed findings with evidence
 
-**Turnaround:** 5 business days
+**Turnaround:** 72 hours after intake and payment
 
-**Best for:** Teams that want not just a plan but a starting point they can build on immediately.
+**What it covers:** Any of our 6 audit categories, with deeper analysis.
+
+**What you provide:** Same as Lite, plus screenshots of tool usage, subscription bills, workflow descriptions if complex.
+
+**What is NOT included:** Implementation support, code changes, system setup.
 
 ---
 
-## Deliverables Format
+### AI Audit + Roadmap -- $150
+**For:** Audit + implementation scaffolding. "Tell me what to fix and help me start."
 
-Each tier produces:
-1. **PDF report** — polished, printable
-2. **Markdown version** — for easy reference and version control
-3. **(Scaffold tier only)** PR link to a fork/branch of the customer repo
+**What you get:**
+- Everything in Standard, plus:
+- Implementation scaffold (PR, setup script, or configuration guide)
+- CI/CD or workflow automation setup guide
+- Production readiness checklist
+- 7-day follow-up window for questions
+- Post-implementation review offer
 
-## Upsells
+**Turnaround:** 5 business days after intake and payment
 
-These are offered *after* audit delivery, not as part of the base packages:
+**What it covers:** Any of our 6 audit categories, plus implementation scaffolding for the highest-impact findings.
 
-| Upsell | Price | Description |
-|---|---|---|
-| Implementation Sprint | $350–$900 | 1–2 weeks of focused implementation work |
-| Monthly Retainer | $250–$600/mo | Ongoing agent-assisted maintenance and reviews |
-| CI/CD + Deploy Setup | $150–$300 | Standalone deployment pipeline setup |
+**What you provide:** Access to relevant repos/configs (read-only), or detailed screenshots and descriptions if repo access is not possible.
 
-These are the upsells that fund Pro plans. Not "more audits" — actual implementation work.
+**What is NOT included:** Full implementation of all recommendations, ongoing support beyond the 7-day window, custom software development.
 
-## What We Don't Offer
+## Add-On Services
 
-- Free audits or "quick looks"
-- Custom scoping beyond the defined tiers (that's implementation sprint territory)
-- Ongoing support beyond the 1-week follow-up window (offered as retainer)
-- Consulting on non-technical topics (business strategy, marketing, etc.)
-- Direct access to AI tools or subscriptions — customers buy deliverables, not infrastructure access
+| Add-On | Price | Description |
+|--------|-------|-------------|
+| Follow-up Audit | $50 | Audit the same setup 30-90 days later to track improvement |
+| Team Audit (3-5 people) | $300 | Audit AI usage across a small team, per-person findings + team summary |
+| Emergency Review | $150 | 24-hour turnaround for urgent issues (incident, data concern, system downgrade) |
+| Implementation Sprint | Custom | Separate engagement for implementing recommendations -- scoped after the audit |
 
-## Refund/Revision Policy
+## What Every Tier Includes
 
-- One round of clarifying questions included within 1 week of delivery
-- No refunds after delivery unless deliverables were not provided
-- If the repo cannot be analyzed (inaccessible, empty, non-standard), customer is contacted before proceeding
+- Honest, evidence-based findings
+- Findings mapped to our audit taxonomy
+- Severity ratings on every finding
+- A prioritized action plan
+- PDF and Markdown report delivery
+- 14-day refund window (before work begins)
+
+## Payment
+
+Payment via Stripe. Required before work begins. All prices in USD.
+
+No monthly fees. No subscriptions to our service. One-time payment per audit.
+
+## Refund Policy
+
+- Before work begins: full refund, no questions
+- After work begins: we will make the deliverable useful or refund
+- After delivery and follow-up: refund case-by-case

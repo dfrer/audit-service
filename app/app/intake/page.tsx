@@ -1,36 +1,32 @@
-import type { Metadata } from "next";
 import IntakeForm from "@/components/IntakeForm";
 
-export const metadata: Metadata = {
-  title: "Complete Your Intake Form -- AI Project Audit",
-};
-
-export default async function IntakePage(props: { searchParams: Promise<{ package?: string; orderId?: string }> }) {
-  const params = await props.searchParams;
-  const preselectedPackage = params.package || undefined;
-  const orderId = params.orderId || undefined;
-
+export default function IntakePage() {
   return (
-    <div className="min-h-screen bg-zinc-50">
-      <nav className="border-b border-zinc-200 bg-white">
-        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center">
-          <a href="/" className="font-semibold text-lg tracking-tight">
-            audit<span className="text-zinc-400">.dev</span>
+    <div className="min-h-screen" style={{ background: "var(--bg)" }}>
+      <style>{`html { scroll-behavior: smooth; }`}</style>
+
+      {/* NAV */}
+      <nav className="sticky top-0 z-50 border-b" style={{ borderColor: "var(--border)", background: "rgba(12,12,12,0.85)", backdropFilter: "blur(16px)" }}>
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
+          <a href="/" className="mono text-sm font-medium tracking-wider" style={{ color: "var(--text)" }}>
+            audit<span style={{ color: "var(--accent)" }}>.dev</span>
+          </a>
+          <a href="/" className="mono text-xs transition-colors hover:text-amber-500" style={{ color: "var(--text-muted)" }}>
+            BACK TO SITE
           </a>
         </div>
       </nav>
 
-      <main className="max-w-2xl mx-auto px-4 py-16">
+      {/* FORM */}
+      <main className="mx-auto max-w-2xl px-6 py-16">
         <div className="mb-8">
-          <h1 className="text-2xl font-semibold tracking-tight">Intake form</h1>
-          <p className="mt-2 text-zinc-500 text-sm">
-            Tell us about your project so we can start the audit. This takes about 2 minutes.
+          <div className="mono-sm mb-2" style={{ color: "var(--accent-dim)" }}>INTAKE FORM</div>
+          <h1 className="text-2xl font-semibold tracking-tight" style={{ color: "var(--text)" }}>Tell us about your AI setup</h1>
+          <p className="text-sm mt-2" style={{ color: "var(--text-secondary)" }}>
+            We will use this to scope your audit. Be honest -- the more we know, the better the findings.
           </p>
-          {orderId && (
-            <p className="mt-1 text-xs text-zinc-400">Order: {orderId}</p>
-          )}
         </div>
-        <IntakeForm preselectedPackage={preselectedPackage} orderId={orderId} />
+        <IntakeForm />
       </main>
     </div>
   );

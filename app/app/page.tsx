@@ -1,144 +1,211 @@
 import PricingSection from "@/components/PricingSection";
 import FAQSection from "@/components/FAQSection";
 
-const CHECKS = [
-  { icon: "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z", text: "Dependency inventory and vulnerability scan" },
-  { icon: "M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10", text: "Architecture and structure review" },
-  { icon: "M13 10V3L4 14h7v7l9-11h-7z", text: "Prioritized risk list with concrete fixes" },
-  { icon: "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z", text: "Realistic timeline you can actually follow" },
+const PILLARS = [
+  { num: "01", label: "Business AI Operations", desc: "Tool sprawl, cost leakage, workflow gaps, privacy risk" },
+  { num: "02", label: "Personal AI Workflows", desc: "Prompt hygiene, tool confusion, cognitive overload" },
+  { num: "03", label: "Local / Self-Hosted AI", desc: "Model choice, hardware fit, deployment sanity" },
+  { num: "04", label: "AI Coding Workflows", desc: "Agent orchestration, repo hygiene, testing bottlenecks" },
 ];
 
-function CheckIcon({ d }: { d: string }) {
+const STATS = [
+  { val: "6", label: "Audit categories" },
+  { val: "$75", label: "Starting price" },
+  { val: "48h", label: "Fastest delivery" },
+  { val: "100%", label: "Fixed price" },
+];
+
+const STEPS = [
+  { step: "01", title: "Pick a package, fill intake", desc: "Choose your audit type, pay via Stripe, and tell us what you are working with." },
+  { step: "02", title: "We run the audit", desc: "Structured analysis across your tools, workflows, costs, and gaps. Real findings, not theory." },
+  { step: "03", title: "You get a report + plan", desc: "Prioritized findings, concrete recommendations, and an action plan you can follow." },
+];
+
+const WHY = [
+  { title: "Honest, not flattering", desc: "We will tell you when a tool is wasted money. No vendor partnerships, no affiliate links." },
+  { title: "Practical over academic", desc: "Actual findings from your actual setup. No generic AI best-practices slides." },
+  { title: "Fast, not forever", desc: "48 hours for the basic audit. 5 days max with a roadmap. You will not wait weeks." },
+];
+
+const FAQS = [
+  { q: "What exactly do you audit?", a: "We audit how you actually use AI in practice -- your tool stack, workflows, costs, automation gaps, privacy handling, and whether your setup is actually helping or just adding complexity. Business operations, personal workflows, local setups, coding workflows." },
+  { q: "Do I need a codebase?", a: "Not necessarily. We audit AI usage across business, personal, local setups, and coding. A repo is optional for non-code audits." },
+  { q: "What do I get back?", a: "A concrete report with findings ranked by impact, specific recommendations, and an action plan. Lite is a prioritized fix list. Standard adds a roadmap. Scaffold adds implementation scaffolding." },
+  { q: "How fast?", a: "48 hours for Lite, 72 hours for Standard, 5 business days for Scaffold. Delivery starts after payment confirmation." },
+  { q: "Is this generic advice?", a: "No. Every finding is specific to your actual tools, workflows, and setup. Not a templated best-practices deck." },
+  { q: "Refund policy?", a: "If we have not started, yes. Once work has begun, we will make the deliverable useful for you." },
+];
+
+const ACCENT = "var(--accent)";
+const ACCENT_DIM = "var(--accent-dim)";
+const ACCENT_GLOW = "var(--accent-glow)";
+const BG = "var(--bg)";
+const SURFACE = "var(--surface)";
+const BORDER = "var(--border)";
+const TEXT = "var(--text)";
+const TEXT_SEC = "var(--text-secondary)";
+const TEXT_MUTED = "var(--text-muted)";
+
+function Diamond({ className, style: s }: { className?: string; style?: React.CSSProperties }) {
   return (
-    <svg className="w-5 h-5 text-zinc-400 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-      <path strokeLinecap="round" strokeLinejoin="round" d={d} />
+    <svg className={className} viewBox="0 0 12 12" fill="currentColor" style={{ color: "var(--accent-dim)", ...s }}>
+      <path d="M6 0L12 6L6 12L0 6Z" />
     </svg>
   );
 }
 
-function StepCard({ num, title, desc }: { num: string; title: string; desc: string }) {
+function NavPill({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-3">
-      <div className="flex items-center gap-4">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-zinc-100 text-sm font-semibold text-zinc-900 ring-1 ring-inset ring-zinc-200">
-          {num}
-        </div>
-        <h3 className="font-medium text-zinc-900">{title}</h3>
-      </div>
-      <p className="text-sm leading-relaxed text-zinc-500 pl-16">{desc}</p>
-    </div>
+    <a
+      href={href}
+      className="px-3 py-1.5 text-xs mono transition-colors rounded"
+      style={{ color: TEXT_SEC }}
+    >
+      {children}
+    </a>
   );
 }
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-white">
-      <style>{`html { scroll-behavior: smooth; }`}</style>
+    <div className="min-h-screen" style={{ background: BG }}>
 
       {/* NAV */}
-      <nav className="sticky top-0 z-50 border-b border-zinc-200/80 bg-white/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">
-          <a href="/" className="text-lg font-semibold tracking-tight text-zinc-900">
-            audit<span className="text-zinc-400">.dev</span>
+      <nav className="sticky top-0 z-50 border-b" style={{ borderColor: BORDER, background: "rgba(12,12,12,0.85)", backdropFilter: "blur(16px)" }}>
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
+          <a href="/" className="mono text-sm font-medium tracking-wider" style={{ color: TEXT }}>
+            audit<span style={{ color: ACCENT }}>.dev</span>
           </a>
           <div className="flex items-center gap-1">
-            <a href="#how-it-works" className="px-3 py-2 text-sm text-zinc-600 hover:text-zinc-900 transition-colors rounded-md hover:bg-zinc-50">
-              How it works
-            </a>
-            <a href="#pricing" className="px-3 py-2 text-sm text-zinc-600 hover:text-zinc-900 transition-colors rounded-md hover:bg-zinc-50">
-              Pricing
-            </a>
-            <a href="#faq" className="px-3 py-2 text-sm text-zinc-600 hover:text-zinc-900 transition-colors rounded-md hover:bg-zinc-50">
-              FAQ
-            </a>
-            <a
-              href="#pricing"
-              className="ml-2 px-4 py-2 text-sm font-medium text-white bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-colors"
-            >
-              Get an Audit
+            <NavPill href="#diagnose">DIAGNOSE</NavPill>
+            <NavPill href="#pricing">PRICING</NavPill>
+            <NavPill href="#faq">FAQ</NavPill>
+            <a href="#pricing"
+               className="ml-3 px-4 py-1.5 text-xs mono font-medium rounded transition-opacity"
+               style={{ background: ACCENT, color: BG }}>
+              GET STARTED
             </a>
           </div>
         </div>
       </nav>
 
       {/* HERO */}
-      <section className="mx-auto max-w-5xl px-6 pt-24 pb-20 sm:pt-32">
-        <div className="mx-auto max-w-3xl">
-          <h1 className="text-balance text-4xl font-bold tracking-tight text-zinc-900 sm:text-5xl lg:text-6xl">
-            Ship with a plan.{" "}
-            <span className="text-zinc-400">Stop guessing.</span>
+      <section className="mx-auto max-w-6xl px-6 pt-32 pb-24 sm:pt-40">
+        <div className="max-w-3xl">
+          <div className="mono-sm mb-6 flex items-center gap-2" style={{ color: ACCENT_DIM }}>
+            <Diamond />
+            AI AUDIT SERVICE
+          </div>
+          <h1 className="text-balance text-4xl font-bold leading-tight tracking-tight sm:text-5xl lg:text-6xl" style={{ color: TEXT }}>
+            You are using AI.
+            <br />
+            <span style={{ color: ACCENT }}>Is it actually working?</span>
           </h1>
-          <p className="mt-6 max-w-2xl text-lg leading-relaxed text-zinc-600">
-            Send me your repo. I will analyze it, find the risks, and give you a{" "}
-            prioritized execution plan with a realistic timeline. Not consulting,{" "}
-            not vague feedback -- a concrete plan you can follow.
+          <p className="mt-6 max-w-xl text-base leading-relaxed" style={{ color: TEXT_SEC }}>
+            A practical audit of how you or your team actually uses AI --
+            what is working, what is bleeding money, what is quietly broken,
+            and what to fix first. Fixed price. No fluff.
           </p>
-          <div className="mt-10 flex flex-wrap gap-4">
-            <a
-              href="#pricing"
-              className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-white bg-zinc-900 rounded-lg hover:bg-zinc-800 transition-colors shadow-sm"
-            >
-              Get an Audit
+          <div className="mt-10 flex flex-wrap gap-3">
+            <a href="#pricing"
+               className="px-6 py-3 text-sm mono font-medium rounded transition-opacity hover:opacity-85"
+               style={{ background: ACCENT, color: BG }}>
+              GET AN AUDIT
             </a>
-            <a
-              href="#how-it-works"
-              className="inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-zinc-700 bg-zinc-100 rounded-lg hover:bg-zinc-200 transition-colors"
-            >
-              See how it works
+            <a href="#diagnose"
+               className="px-6 py-3 text-sm mono font-medium rounded border transition-colors hover:text-zinc-100"
+               style={{ borderColor: BORDER, color: TEXT_SEC }}>
+              WHAT WE AUDIT
             </a>
           </div>
-          <ul className="mt-14 grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
-            {CHECKS.map((c) => (
-              <li key={c.text} className="flex items-start gap-3 text-sm text-zinc-600">
-                <CheckIcon d={c.icon} />
-                <span>{c.text}</span>
-              </li>
-            ))}
-          </ul>
+        </div>
+
+        {/* Stats grid */}
+        <div className="mt-20 grid grid-cols-2 sm:grid-cols-4 gap-px" style={{ background: BORDER }}>
+          {STATS.map((s) => (
+            <div key={s.label} className="px-6 py-5" style={{ background: SURFACE }}>
+              <div className="text-2xl font-bold mono" style={{ color: ACCENT }}>{s.val}</div>
+              <div className="text-xs mono mt-1" style={{ color: TEXT_MUTED }}>{s.label}</div>
+            </div>
+          ))}
         </div>
       </section>
 
-      {/* HOW IT WORKS */}
-      <section id="how-it-works" className="border-y border-zinc-100 bg-zinc-50/50 py-24">
-        <div className="mx-auto max-w-5xl px-6">
-          <div className="mx-auto max-w-2xl text-center mb-16">
-            <h2 className="text-2xl font-semibold tracking-tight text-zinc-900">How it works</h2>
-            <p className="mt-3 text-zinc-500">Three steps between stuck and a plan.</p>
+      {/* DIAGNOSE */}
+      <section id="diagnose" className="border-y py-24" style={{ borderColor: BORDER }}>
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="mono-sm mb-6 flex items-center gap-2" style={{ color: ACCENT_DIM }}>
+            <Diamond /> WHAT WE AUDIT
           </div>
-          <div className="grid gap-12 sm:grid-cols-3">
-            <StepCard num="1" title="Buy and fill out the intake form" desc="Pick a package, pay via Stripe, then tell me about your repo, goals, and any constraints." />
-            <StepCard num="2" title="I analyze your codebase" desc="I run a structured audit: dependencies, architecture, security, maintainability. Then I write a report." />
-            <StepCard num="3" title="You get a plan" desc="A PDF report with prioritized findings, recommendations ranked by impact, and a timeline. Scaffold tier includes a PR." />
+          <h2 className="text-2xl font-semibold tracking-tight mb-4" style={{ color: TEXT }}>Where is AI failing you?</h2>
+          <p className="max-w-xl text-sm leading-relaxed mb-12" style={{ color: TEXT_SEC }}>
+            Pick the lane that matches your situation. Each audit produces
+            concrete findings and a prioritized action plan.
+          </p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {PILLARS.map((p) => (
+              <div key={p.num}
+                   className="border rounded-lg px-6 py-5 transition-colors"
+                   style={{ borderColor: BORDER, background: SURFACE }}>
+                <div className="flex items-start gap-4">
+                  <span className="mono-sm mt-0.5" style={{ color: ACCENT_DIM }}>{p.num}</span>
+                  <div>
+                    <h3 className="text-sm font-medium mb-1" style={{ color: TEXT }}>{p.label}</h3>
+                    <p className="text-xs" style={{ color: TEXT_MUTED }}>{p.desc}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* PROCESS */}
+      <section id="how-it-works" className="py-24">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="mono-sm mb-6 flex items-center gap-2" style={{ color: ACCENT_DIM }}>
+            <Diamond /> PROCESS
+          </div>
+          <h2 className="text-2xl font-semibold tracking-tight mb-12" style={{ color: TEXT }}>Three steps to clarity</h2>
+          <div className="grid gap-px sm:grid-cols-3" style={{ background: BORDER }}>
+            {STEPS.map((s) => (
+              <div key={s.step} className="px-8 py-10" style={{ background: SURFACE }}>
+                <div className="mono-sm mb-4" style={{ color: ACCENT }}>{s.step}</div>
+                <h3 className="text-sm font-medium mb-2" style={{ color: TEXT }}>{s.title}</h3>
+                <p className="text-xs leading-relaxed" style={{ color: TEXT_MUTED }}>{s.desc}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* PRICING */}
-      <section id="pricing" className="py-24">
-        <div className="mx-auto max-w-5xl px-6">
-          <div className="mx-auto max-w-2xl text-center mb-16">
-            <h2 className="text-2xl font-semibold tracking-tight text-zinc-900">Pricing</h2>
-            <p className="mt-3 text-zinc-500">Fixed price. Fixed scope. No surprises.</p>
+      <section id="pricing" className="border-y py-24" style={{ borderColor: BORDER }}>
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="mono-sm mb-6 flex items-center gap-2" style={{ color: ACCENT_DIM }}>
+            <Diamond /> PRICING
           </div>
+          <h2 className="text-2xl font-semibold tracking-tight mb-4" style={{ color: TEXT }}>Fixed price. Fixed scope.</h2>
+          <p className="max-w-xl text-sm leading-relaxed mb-12" style={{ color: TEXT_SEC }}>
+            No hourly billing. No surprise invoices. You know the cost before you start.
+          </p>
           <PricingSection />
         </div>
       </section>
 
-      {/* TRUST */}
-      <section className="border-y border-zinc-100 bg-zinc-50/50 py-24">
-        <div className="mx-auto max-w-5xl px-6">
-          <div className="mx-auto max-w-2xl text-center mb-16">
-            <h2 className="text-2xl font-semibold tracking-tight text-zinc-900">Why this works</h2>
+      {/* WHY */}
+      <section className="py-24">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="mono-sm mb-6 flex items-center gap-2" style={{ color: ACCENT_DIM }}>
+            <Diamond /> WHY THIS WORKS
           </div>
-          <div className="grid gap-8 sm:grid-cols-3">
-            {[
-              { title: "Fixed price, fixed scope", desc: "You know exactly what you are getting and what it costs before you buy. No hourly billing, no scope creep." },
-              { title: "Built for developers", desc: "No jargon, no vague best practices. You get concrete findings tied to your actual codebase." },
-              { title: "Fast turnaround", desc: "48 hours for the basic audit, 5 days max for the full scaffold. You won't be waiting weeks." },
-            ].map((item) => (
-              <div key={item.title} className="rounded-xl border border-zinc-200 bg-white p-6 transition-shadow hover:shadow-sm">
-                <h3 className="font-medium text-zinc-900">{item.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-zinc-500">{item.desc}</p>
+          <h2 className="text-2xl font-semibold tracking-tight mb-12" style={{ color: TEXT }}>Built for people who use AI, not sell it</h2>
+          <div className="grid gap-4 sm:grid-cols-3">
+            {WHY.map((item) => (
+              <div key={item.title} className="border rounded-lg px-6 py-6" style={{ borderColor: BORDER, background: SURFACE }}>
+                <Diamond className="mb-3" />
+                <h3 className="text-sm font-medium mb-2" style={{ color: TEXT }}>{item.title}</h3>
+                <p className="text-xs leading-relaxed" style={{ color: TEXT_MUTED }}>{item.desc}</p>
               </div>
             ))}
           </div>
@@ -146,34 +213,43 @@ export default function Home() {
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="py-24">
-        <div className="mx-auto max-w-5xl px-6">
-          <div className="mx-auto max-w-3xl">
-            <h2 className="text-2xl font-semibold tracking-tight text-zinc-900">Frequently asked questions</h2>
-            <p className="mt-3 text-zinc-500 mb-10">Everything you need to know before getting started.</p>
+      <section id="faq" className="border-y py-24" style={{ borderColor: BORDER }}>
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="mono-sm mb-6 flex items-center gap-2" style={{ color: ACCENT_DIM }}>
+            <Diamond /> FAQ
+          </div>
+          <h2 className="text-2xl font-semibold tracking-tight mb-12" style={{ color: TEXT }}>Questions, answered</h2>
+          <div className="max-w-2xl">
             <FAQSection />
           </div>
         </div>
       </section>
 
       {/* FINAL CTA */}
-      <section className="bg-zinc-900 py-24 text-white">
-        <div className="mx-auto max-w-5xl px-6 text-center">
-          <h2 className="text-3xl font-semibold tracking-tight">Ready to stop guessing?</h2>
-          <p className="mt-4 text-lg text-zinc-400">Pick a package and have your audit ready in 48 hours.</p>
-          <a href="#pricing" className="mt-8 inline-flex items-center justify-center px-6 py-3 text-sm font-medium text-zinc-900 bg-white rounded-lg hover:bg-zinc-100 transition-colors">
-            Get an Audit
+      <section className="py-24 relative overflow-hidden" style={{ background: SURFACE }}>
+        <div className="absolute inset-0 pointer-events-none" style={{ opacity: 0.05, backgroundImage: "repeating-linear-gradient(0deg, transparent, transparent 49px, var(--accent) 49px, var(--accent) 50px)", backgroundSize: "100% 50px" }} />
+        <div className="mx-auto max-w-6xl px-6 text-center relative z-10">
+          <h2 className="text-3xl font-semibold tracking-tight mb-4" style={{ color: TEXT }}>
+            Stop wondering if your AI setup costs more than it helps.
+          </h2>
+          <p className="text-sm mb-8" style={{ color: TEXT_MUTED }}>
+            Get a real audit. Start fixing what is actually broken.
+          </p>
+          <a href="#pricing"
+             className="inline-flex px-8 py-3 text-sm mono font-medium rounded transition-opacity hover:opacity-85"
+             style={{ background: ACCENT, color: BG }}>
+            GET AN AUDIT
           </a>
         </div>
       </section>
 
       {/* FOOTER */}
-      <footer className="border-t border-zinc-200 bg-white py-8">
-        <div className="mx-auto flex max-w-5xl items-center justify-between px-6">
-          <p className="text-sm text-zinc-500">2026 audit.dev. All rights reserved.</p>
-          <div className="flex items-center gap-6 text-sm text-zinc-500">
-            <a href="/intake" className="hover:text-zinc-900 transition-colors">Intake</a>
-            <a href="/admin/orders" className="hover:text-zinc-900 transition-colors">Admin</a>
+      <footer className="border-t py-8" style={{ borderColor: BORDER, background: BG }}>
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6">
+          <p className="text-xs mono" style={{ color: TEXT_MUTED }}>2026 audit.dev</p>
+          <div className="flex items-center gap-6 text-xs mono" style={{ color: TEXT_MUTED }}>
+            <a href="/intake" className="hover:text-amber-500 transition-colors">INTAKE</a>
+            <a href="/admin/orders" className="hover:text-amber-500 transition-colors">ADMIN</a>
           </div>
         </div>
       </footer>

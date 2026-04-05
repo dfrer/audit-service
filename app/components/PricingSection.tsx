@@ -1,40 +1,49 @@
 import { PACKAGE_CONFIG, PackageTier } from "@/lib/types/order";
 import Link from "next/link";
 
-const TIERS: { tier: PackageTier; highlight: boolean; features: string[] }[] = [
+interface TierConfig {
+  tier: PackageTier;
+  highlight: boolean;
+  features: string[];
+  bestFor: string;
+}
+
+const TIERS: TierConfig[] = [
   {
     tier: "audit-lite",
     highlight: false,
+    bestFor: "Quick diagnostic -- where are you bleeding time or money?",
     features: [
-      "Repository analysis and requirements intake",
-      "Prioritized risk list",
-      "Recommended tech stack with rationale",
-      "Top 10 fixes ranked by impact",
-      "Realistic 2-week execution plan",
-      "PDF and Markdown report",
+      "Tool and usage inventory",
+      "Top risk and cost findings",
+      "Prioritized fix list",
+      "2-week action plan",
+      "PDF + Markdown report",
     ],
   },
   {
     tier: "audit-standard",
     highlight: true,
+    bestFor: "Full picture -- what is broken, what works, what to do next",
     features: [
       "Everything in Lite, plus:",
-      "30-day execution plan with milestones",
-      "Architecture diagram",
-      "CI/CD baseline recommendations",
+      "30-day roadmap with milestones",
+      "Workflow and integration map",
       "Effort estimates per action item",
-      "Dependency vulnerability scan",
+      "Cost and vendor dependency analysis",
+      "Privacy and data handling review",
     ],
   },
   {
     tier: "audit-scaffold",
     highlight: false,
+    bestFor: "Audit + implementation roadmap with scaffold deliverables",
     features: [
       "Everything in Standard, plus:",
-      "One PR adding repo hygiene (lint/format/test)",
-      "Deployment-ready skeleton",
-      "CI/CD workflow (GitHub Actions)",
+      "Implementation scaffold (PR or guide)",
+      "CI/CD or workflow automation setup",
       "Production readiness checklist",
+      "7-day follow-up window",
     ],
   },
 ];
@@ -42,52 +51,67 @@ const TIERS: { tier: PackageTier; highlight: boolean; features: string[] }[] = [
 export default function PricingSection() {
   return (
     <div className="grid gap-6 sm:grid-cols-3">
-      {TIERS.map(({ tier, highlight, features }) => {
+      {TIERS.map(({ tier, highlight, features, bestFor }) => {
         const config = PACKAGE_CONFIG[tier];
         return (
           <div
             key={tier}
-            className={`relative flex flex-col rounded-xl p-6 ${
-              highlight
-                ? "border-2 border-zinc-900 bg-white shadow-lg shadow-zinc-900/5"
-                : "border border-zinc-200 bg-white"
-            }`}
+            className="relative flex flex-col rounded-lg border p-6 transition-colors"
+            style={{
+              borderColor: highlight ? "var(--accent)" : "var(--border)",
+              background: "var(--surface)",
+            }}
           >
             {highlight && (
-              <div className="absolute -top-3 left-6 px-2.5 py-0.5 text-xs font-medium text-white bg-zinc-900 rounded-full">
-                Most popular
+              <div
+                className="absolute -top-2.5 left-6 px-2.5 py-0.5 text-xs mono font-medium rounded-sm"
+                style={{ background: "var(--accent)", color: "var(--bg)" }}
+              >
+                RECOMMENDED
               </div>
             )}
 
             <div className="mb-6">
-              <h3 className="text-base font-medium text-zinc-900">{config.name}</h3>
-              <div className="mt-3 flex items-baseline gap-1">
-                <span className="text-4xl font-bold tracking-tight text-zinc-900">${config.price}</span>
-                <span className="text-sm text-zinc-500 ml-1">one-time</span>
+              <div className="flex items-baseline justify-between">
+                <h3 className="text-sm font-medium" style={{ color: "var(--text)" }}>
+                  {config.name}
+                </h3>
+                <span className="mono-sm" style={{ color: highlight ? "var(--accent)" : "var(--text-muted)" }}>
+                  ${config.price}
+                </span>
               </div>
-              <p className="mt-1 text-xs text-zinc-500">Turnaround: {config.turnaround}</p>
+              <p className="text-xs mono mt-3 mb-1" style={{ color: "var(--text-secondary)" }}>
+                {config.turnaround}
+              </p>
+              <p className="text-xs" style={{ color: "var(--text-muted)" }}>
+                {bestFor}
+              </p>
             </div>
+
+            {/* Divider line */}
+            <div className="h-px mb-6" style={{ background: "var(--border)" }} />
 
             <div className="mb-8 flex flex-1 flex-col gap-3">
               {features.map((f) => (
                 <div key={f} className="flex items-start gap-2.5">
-                  <svg className="mt-0.5 h-4 w-4 shrink-0 text-zinc-400" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                  </svg>
-                  <span className="text-sm text-zinc-600">{f}</span>
+                  <div className="mt-0.5 w-1.5 h-1.5 shrink-0 rounded-sm" style={{ background: highlight ? "var(--accent)" : "var(--accent-dim)" }} />
+                  <span className="text-xs leading-snug" style={{ color: "var(--text-secondary)" }}>
+                    {f}
+                  </span>
                 </div>
               ))}
             </div>
 
             <Link
               href={`/intake?package=${tier}`}
-              className={`block w-full rounded-lg py-2.5 text-center text-sm font-medium transition-colors ${
+              className="block w-full rounded-md py-2.5 text-center text-xs mono font-medium transition-colors"
+              style={
                 highlight
-                  ? "bg-zinc-900 text-white hover:bg-zinc-800"
-                  : "bg-zinc-100 text-zinc-900 hover:bg-zinc-200"
-              }`}
+                  ? { background: "var(--accent)", color: "var(--bg)" }
+                  : { border: "1px solid var(--border-hover)", color: "var(--text-secondary)" }
+              }
             >
-              Get This Audit
+              GET THIS AUDIT
             </Link>
           </div>
         );

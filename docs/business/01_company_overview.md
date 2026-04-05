@@ -1,41 +1,55 @@
-# Company Overview
+---
+title: "Company Overview -- AI Audit Service"
+updated: "2026-04-06"
+---
 
-## What This Company Is
+# Company Overview -- AI Audit Service
 
-A productized service business that delivers **AI project audits and build plans** to developers and small teams. Customers receive a practical, prioritized execution plan and optionally a baseline repository scaffold so they can ship with confidence.
+## What This Is
 
-## What It Sells
+A productized audit service for how AI is actually being used across business, personal, local, and development contexts.
 
-- **Audit Lite ($75)** — Risk list, recommended stack, top 10 fixes, 2-week plan
-- **Audit Standard ($120)** — Everything in Lite + 30-day plan, architecture diagram, CI/CD baseline, effort estimates
-- **Audit + Scaffold ($150)** — Everything in Standard + one PR adding repo hygiene, deployment skeleton, production checklist
+We examine real AI setups, identify waste, risk, and gaps, and produce prioritized action plans. Fixed price, fixed scope, fast turnaround.
 
-## Who It Serves
+## What We Audit
 
-- Solo developers and small teams who have started building something but feel stuck
-- Founders with a repo full of code but no clear path to production
-- Teams accumulating tech debt who need an outside perspective on what matters
-- Anyone who wants "a plan I can actually follow" instead of vague advice
+1. **Business AI Operations** -- tool sprawl, cost leakage, workflow gaps, privacy risk, vendor lock-in
+2. **Personal AI Workflows** -- prompt hygiene, tool confusion, cognitive overload, setup gaps
+3. **Local / Self-Hosted AI** -- model choice, hardware fit, deployment sanity, maintenance burden
+4. **AI Coding / Build Workflows** -- agent orchestration, repo hygiene, testing, automation
+5. **AI/ML Deployment Practicality** -- hosted vs local vs hybrid, production readiness, cost/performance
+6. **General AI Usage** -- broad practical audit for situations that do not fit a narrow lane
 
-## Why the Model Is Lean
+## Service Tiers
 
-This is a **productized consulting pipeline**, not a SaaS. There are no user accounts, no dashboards, no real-time features, no multiplayer coordination. Each order follows a fixed flow: purchase -> intake -> audit -> delivery. The simplicity keeps costs low and execution fast.
+| Tier | Price | Turnaround | What You Get |
+|------|-------|------------|--------------|
+| AI Audit Lite | $75 | 48 hours | Risk list, findings, prioritized action plan |
+| AI Audit Standard | $120 | 72 hours | Lite + detailed report, cost analysis, effort estimates, 30-day roadmap |
+| AI Audit + Roadmap | $150 | 5 business days | Standard + implementation scaffold, setup guides, follow-up window |
 
-**Monthly fixed costs at minimum viable scale:**
-- ChatGPT Plus: $20/mo (sufficient to start)
-- Vercel Pro: $20/mo (required for commercial use)
-- Total: **$40/mo** fixed + Stripe processing fees (~2.9% + $0.30)
+## Target Audience
 
-The service breaks even at 2-3 audits per month. Anything above that is profit or reinvestment.
+- Developers and teams using AI coding tools (Cursor, Copilot, Claude Code, etc.)
+- Small business owners using AI in operations but unsure if it is working
+- Individuals with personal AI workflows who want them optimized
+- Anyone running local/self-hosted AI who needs a sanity check
+- Teams deploying AI/ML who need a production readiness check
 
-This is intentional. The goal is to validate demand before adding complexity.
+## What This Is NOT
+
+- A consulting engagement (we do not embed with your team)
+- A custom AI development service (we audit what you have)
+- An AI training or education service (we give you actionable findings, not courses)
+- A multi-agency platform (this is a lean, single-operator service)
+- A SaaS product (no user accounts, no dashboards, no subscriptions)
 
 ## Ownership Model
 
-- **Human owner** controls all root accounts: email, GitHub, Vercel, Stripe, OpenAI billing, domain registrar, bank account
-- **Hermes** acts as operator/implementer/admin assistant with scoped tokens
-- All root credentials remain human-owned; Hermes receives fine-grained, revocable tokens
-- Any action that touches identity, money, deletion, or credentials requires explicit human approval
-- The human owner can revoke any Hermes token at any time without losing the business identity
-- Hermes cannot create root accounts (platform terms prohibit bot-created accounts, especially GitHub)
-- This structure is enforceable and platform-compliant — not a theoretical arrangement
+- **Human Owner:** Creates accounts, handles payments, reviews quality, makes business decisions
+- **Agent Operator:** Performs analysis, generates reports, manages infrastructure, handles intake
+- **Approval Gates:** All critical actions (billing, deletion, secrets, quality sign-off) require human approval
+
+## Why Lean
+
+This service works because it is focused. One operator, fixed packages, clear boundaries, fast delivery. No sales team, no custom engagements, no scope creep. The audit is the product.

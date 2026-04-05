@@ -1,6 +1,16 @@
-# AI Project Audit Service
+# AI Audit Service
 
-A productized service that delivers codebase audits and build plans to developers. Customers receive a practical, prioritized execution plan and optionally a baseline repository scaffold.
+A practical audit service for how AI is actually being used -- across business, personal, local setups, coding workflows, and AI/ML deployments.
+
+**What we do:** Examine real AI setups, identify waste, risk, and gaps, and deliver prioritized action plans. Fixed price, fixed scope, fast turnaround.
+
+**What we audit:**
+- Business AI operations (tools, workflows, costs, privacy)
+- Personal AI workflows (prompts, habits, tool stack)
+- Local / self-hosted AI (models, hardware, setup sanity)
+- AI coding / build workflows (Cursor, agents, repos, testing)
+- AI/ML deployment practicality (hosted vs local, production readiness)
+- General AI usage (does not fit a narrow lane)
 
 ## Quick Start
 
@@ -8,69 +18,83 @@ A productized service that delivers codebase audits and build plans to developer
 cd app
 npm install
 cp .env.example .env.local
+# Fill in .env.local with your credentials
 npm run dev
 ```
-
-Open http://localhost:3000.
 
 ## Project Structure
 
 ```
 audit-service/
-  README.md                  -- This file
-  docs/                      -- Business, product, ops, security, sales, legal docs
-    business/                -- Company model, service offers, business model
-    product/                 -- Product spec, customer journey
-    ops/                     -- Operator model, runbooks, agent tasks, handoff protocol
-    security/                -- Access model, approval gates
-    sales/                   -- Positioning, outreach templates
-    legal/                   -- Compliance notes, manual account setup checklist
-  app/                       -- Next.js application (src dir = app/)
-    app/                     -- App router pages
-      page.tsx               -- Landing page
-      intake/page.tsx        -- Intake form
-      confirm/page.tsx       -- Order confirmation
-      admin/orders/page.tsx  -- Order admin view
-      api/                   -- API routes (create-order, stripe-webhook, health)
-    components/              -- React components
-    lib/                     -- Shared libraries
-      types/                 -- TypeScript type definitions
-      db/                    -- Database interface + local implementation
-      adapters/              -- Stripe, email, GitHub, storage adapters
-  prompts/                   -- Agent prompt templates
-  scripts/                   -- Bootstrap, lint, seed, export, maintenance scripts
-  templates/                 -- Report templates, email templates
-  .github/workflows/         -- CI/CD (lint, typecheck, test, build)
-  .env.example               -- Environment variable template
+  README.md                      -- This file
+  docs/
+    business/                    -- Business model, service offers, company overview
+    corpus/                      -- Internal audit knowledge base (taxonomy, failure modes, patterns)
+    boundaries/                  -- What this service is and is not
+    ops/                         -- Operator model, runbooks, agent tasks, hardening plan
+    product/                     -- Product spec, customer journey
+    security/                    -- Access model, approval gates
+    sales/                       -- Positioning, outreach templates
+    legal/                       -- Compliance notes, account setup checklist
+  app/                           -- Next.js application
+    app/                         -- Pages: landing, intake, confirm, admin orders
+    api/                         -- API: create-order, checkout, webhook, health
+    lib/                         -- Database, adapters, types
+    components/                  -- UI components
+  scripts/                       -- Bootstrap, maintenance, export
+  prompts/                       -- Audit generation, scaffolding prompts
+  templates/                     -- Report delivery template
 ```
 
-## Ownership Model
+## Current State
 
-- **Human owner** controls all root accounts (GitHub, Vercel, Stripe, OpenAI, email, domain, bank)
-- **Hermes** acts as operator with scoped tokens only
-- See `docs/security/01_access_model.md` for the full access model
-- See `docs/security/02_approval_gates.md` for what requires human approval
-- See `docs/legal/02_manual_account_setup_checklist.md` for what the owner must do manually
+The core operations are hardened:
+- File-based JSONL persistence survives restarts
+- Real Stripe adapter ready for credentials
+- Resend-ready email adapter with console fallback
+- Admin auth via secret token
+- Proper webhook signature verification (when credentials configured)
+- Build passes, TypeScript clean, lint clean
 
-## First Steps for Owner
+## What Requires Manual Setup
 
-1. Read `docs/business/01_company_overview.md` to understand the model
-2. Complete the manual account setup checklist (`docs/legal/02_manual_account_setup_checklist.md`)
-3. Set up environment variables from `.env.example`
-4. Run the bootstrap script: `./scripts/bootstrap.sh`
-5. Deploy to Vercel: `npx vercel --prod`
-6. Configure Stripe webhook pointing to `/api/stripe-webhook`
-7. See `docs/ops/02_runbooks.md` for the launch runbook
+Before taking real orders, the owner must:
+1. Create Stripe account + configure products/prices + webhook endpoint
+2. Create email provider account (Resend/SendGrid) + verify domain
+3. Set `.env.local` with real credentials
+4. Set `ADMIN_SECRET` for admin page protection
+5. Deploy to Vercel (or your platform)
+
+See `docs/legal/02_manual_account_setup_checklist.md` for the full checklist.
+
+## Persistence
+
+The service uses JSONL file-based persistence (`lib/db/jsonl.ts`). Orders are written to `./storage/orders.jsonl` and survive restarts.
+
+For production at scale, implement a PostgreSQL/Supabase adapter via the `OrdersDb` interface in `lib/db/interface.ts`.
+
+## Business Model
+
+Productized service. Fixed prices: $75 / $120 / $150. No hourly billing, no scope creep, no subscriptions to the service.
 
 ## Development
 
 ```bash
-npm run dev          # Start dev server
-npm run build        # Production build
-npm run lint         # ESLint
-npm run typecheck    # TypeScript type check
+# Type check
+npx tsc --noEmit
+
+# Build
+npm run build
+
+# Lint
+npm run lint
 ```
 
-## License
+## Deployment
 
-All rights reserved. This is a private business repository.
+1. Push to GitHub
+2. Connect to Vercel
+3. Set environment variables in Vercel dashboard
+4. Deploy
+
+The `.env.example` documents all required variables.
