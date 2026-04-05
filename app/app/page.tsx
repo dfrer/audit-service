@@ -1,6 +1,5 @@
 import PricingSection from "@/components/PricingSection";
 import FAQSection from "@/components/FAQSection";
-import AsciiBackground from "@/components/AsciiBackground";
 import ShoggothCanvas from "@/components/ShoggothCanvas";
 
 const PILLARS = [
@@ -71,8 +70,8 @@ function NavPill({ href, children }: { href: string; children: React.ReactNode }
 export default function Home() {
   return (
     <div className="min-h-screen relative" style={{ background: BG }}>
-      <AsciiBackground opacity={0.9} zIndex={0} />
       <ShoggothCanvas />
+      <div className="relative" style={{ zIndex: 10 }}>
 
       {/* NAV */}
       <nav className="sticky top-0 z-50 border-b" style={{ borderColor: BORDER, background: "rgba(12,12,12,0.85)", backdropFilter: "blur(16px)" }}>
@@ -151,7 +150,7 @@ export default function Home() {
           </p>
           <div className="grid gap-4 sm:grid-cols-2">
             {PILLARS.map((p) => (
-              <div key={p.num} data-shoggoth={`diagnose-${p.num.slice(0, 1)}`}
+              <div key={p.num} data-shoggoth={`diagnose-${parseInt(p.num) - 1}`}
                    className="border rounded-lg px-6 py-5 transition-colors"
                    style={{ borderColor: BORDER, background: SURFACE }}>
                 <div className="flex items-start gap-4">
@@ -261,6 +260,7 @@ export default function Home() {
           </div>
         </div>
       </footer>
+      </div>
     </div>
   );
 }

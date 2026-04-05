@@ -1,859 +1,379 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef } from "react";
 
 // ═══════════════════════════════════════════════════════════════
-// ASCII ICON DEFINITIONS
-// Each icon is a grid of strings rendered at tendril terminations
+// SHOGGOTH CANVAS -- FINAL PRODUCTION VERSION
+//
+// Architecture:
+//   1. Canvas position: fixed, full viewport, z-index: 0
+//   2. Page content wrapper: position: relative, z-index: 10
+//   3. Core body stays at fixed viewport position (doesn't scroll)
+//   4. Tendrils render on screen coordinates, anchored to page sections
+//   5. Alpha values scaled for VISIBILITY on #0c0c0c background
 // ═══════════════════════════════════════════════════════════════
-const ICONS = {
-  briefcase: [        // Business AI Ops
-    "  ┌─────┐  ",
-    "  │░░░░░░│  ",
-    "  │░░░░░░│  ",
-    "  └──┬──┬─┘  ",
-    "     │  │    ",
-    "   ──┴──┴──  ",
-  ],
-  brain: [            // Personal AI Workflows  
-    "    ░░░░░    ",
-    "  ░░#░░░░░#░░  ",
-    "  ░░░░░░░░░░░  ",
-    "   ░░░█░█░░░   ",
-    "    ░░░░░░░    ",
-    "     └───┘     ",
-  ],
-  server: [           // Local / Self-Hosted
-    "  ┌───────┐  ",
-    "  │ ░░░░░ │  ",
-    "  ├───────┤  ",
-    "  │ ░░░░░ │  ",
-    "  ├───────┤  ",
-    "  │ ░░░░░ │  ",
-    "  └───────┘  ",
-  ],
-  bracket: [          // AI Coding Workflows
-    "  ⟨  ░░░  ⟩  ",
-    "  │  ░░░  │  ",
-    "  └───────┘  ",
-  ],
-  target: [           // Get an Audit (CTA)
-    "   ░░░░░   ",
-    "  ░░ ◉ ░░  ",
-    "   ░░░░░   ",
-  ],
-  diamond: [          // Stats
-    "    ◆    ",
-    "   ░░░   ",
-    "  ░░░░░  ",
-    "   ░░░   ",
-    "    ◆    ",
-  ],
-  clock: [            // Process / Speed
-    "   ┌───┐   ",
-    "  │  │  │  ",
-    "  │ ░▶ │  ",
-    "  │  │  │  ",
-    "   └───┘   ",
-  ],
-  dollar: [           // Pricing
-    "    ──    ",
-    "   $░░$   ",
-    "    $     ",
-    "   $░░$   ",
-    "    ──    ",
-  ],
-  shield: [           // Why This Works
-    "   ┌───┐   ",
-    "   │░░░│   ",
-    "   │ ◉ │   ",
-    "   │░░░│   ",
-    "   └───┘   ",
-  ],
-  question: [         // FAQ
-    "   ─────   ",
-    "  │  ◉  │  ",
-    "  └──┬──┘  ",
-    "     │     ",
-    "   ░░░░░   ",
-  ],
-  arrow: [            // Final CTA
-    "  → ░░░ →  ",
-    "   ░ ░ ░   ",
-    "  → ░░░ →  ",
-  ],
-};
 
-// Icon-to-section mapping
-const SECTION_ICONS: Record<string, string> = {
-  "diagnose-0": "briefcase",
-  "diagnose-1": "brain",
-  "diagnose-2": "server",
-  "diagnose-3": "bracket",
-  "cta-primary": "target",
-  "stat-0": "diamond",
-  "stat-1": "dollar",
-  "stat-2": "clock",
-  "stat-3": "shield",
-  "step-0": "target",
-  "step-1": "brain",
-  "step-2": "arrow",
-  "pricing-card-0": "dollar",
-  "pricing-card-1": "dollar",
-  "pricing-card-2": "dollar",
-  "why-0": "shield",
-  "why-1": "shield",
-  "why-2": "shield",
-  "faq-section": "question",
-  "final-cta": "arrow",
-};
+const CH_CORE = "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;,\"^`'.";
+const CH_TENDRIL = "│─╱╲┌┐└┘├┤┬┴┼·:;∞≈∂⟶⟷↗↘↙↖'`\"";
+const CH_WISP = "·:;,.^'`";
+const CH_EYE = "◉◎●⊕⊗◈";
 
-// ═══════════════════════════════════════════════════════════════
-// CHARACTER PALETTES (no emoji, only monospace-safe chars)
-// ═══════════════════════════════════════════════════════════════
-const P = {
-  core:    "$@B%8&WM#*oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,\"^`'.",
-  mid:     "oahkbdpqwmZO0QLCJUYXzcvunxrjft/\\|()1{}[]?-_+~<>i!lI;:,\"^`'.≈≠∂∇",
-  tendril: "│─╱╲·:;┌┐└┘├┤┬┴┼∞≈∂⟶⟷⟹⟸↗↘↙↖'`\",;:·",
-  wisp:    "·:;,.^'`  ",
-  eye:     "◉◎●○⊕⊗⊛◈◆",
-};
-
-// ═══════════════════════════════════════════════════════════════
-// TYPES
-// ═══════════════════════════════════════════════════════════════
-interface Pt { x: number; y: number; }
-
-interface IconDef {
-  key: string;
-  id: string;
-  screenPos: Pt;
-  visible: boolean;
-  charTimer: number;
-  chars: string[][];
-}
-
-interface TargetEl {
-  id: string;
-  rect: DOMRect;
-  center: Pt;
-  iconKey: string | null;
-}
-
-interface Particle {
-  pos: Pt;
-  vel: Pt;
-  life: number;
-  maxLife: number;
-  ch: string;
-  alpha: number;
-  size: number;
-}
-
-// ═══════════════════════════════════════════════════════════
-// HELPERS
-// ═══════════════════════════════════════════════════════════
 function hsh(x: number, y: number, z: number): number {
   const n = Math.sin(x * 12.9898 + y * 78.233 + z * 45.164) * 43758.5453123;
   return n - Math.floor(n);
 }
 
-function pickChar(pal: string, x: number, y: number, t: number): string {
+function chPick(pal: string, x: number, y: number, t: number): string {
   const i = Math.floor(hsh(x * 0.7, y * 0.7, t * 0.4) * pal.length);
-  return pal[Math.max(0, Math.min(i % pal.length, pal.length - 1))];
+  return pal[Math.max(0, i % pal.length)];
 }
 
-function lerp(a: number, b: number, t: number): number {
-  return a + (b - a) * t;
-}
-
-function clamp(v: number, min: number, max: number): number {
-  return v < min ? min : v > max ? max : v;
-}
-
-function dist(a: Pt, b: Pt): number {
-  const dx = a.x - b.x, dy = a.y - b.y;
-  return Math.sqrt(dx * dx + dy * dy);
-}
-
-// Simplex-like noise function for organic movement
-function noise1D(x: number, seed: number): number {
-  const a = hsh(Math.floor(x), 0, seed);
-  const b = hsh(Math.floor(x) + 1, 0, seed);
-  const t = x - Math.floor(x);
-  const s = t * t * (3 - 2 * t); // smoothstep
-  return a * (1 - s) + b * s;
-}
-
-function fbm(x: number, seed: number, octaves: number): number {
-  let val = 0, amp = 0.5, freq = 1;
-  for (let i = 0; i < octaves; i++) {
-    val += amp * noise1D(x * freq, seed + i * 100);
-    amp *= 0.5;
-    freq *= 2;
-  }
-  return val;
-}
-
-// ═══════════════════════════════════════════════════════════
-// TENDRIL SYSTEM
-// ═══════════════════════════════════════════════════════════
-interface TendrilChain {
-  /** Origin point in viewport coords */
-  origin: Pt;
-  /** Target element id (null for ambient tendrils) */
-  targetId: string | null;
-  /** Chain segments: each segment lerps toward a target */
-  segments: { pos: Pt; target: Pt; idx: number }[];
-  /** Number of segments */
-  count: number;
-  /** Cell size for snapping */
-  cellSize: number;
-  /** Character palette */
-  palette: string;
-  /** Base alpha */
-  maxAlpha: number;
-  /** Wave frequency (very slow: 0.1-0.2) */
-  waveFreq: number;
-  /** Wave amplitude in pixels */
-  waveAmp: number;
-  /** Damping factor (lower = slower, heavier) */
-  damping: number;
-  /** Noise seed for uniqueness */
-  noiseSeed: number;
-  /** Whether this tendril is currently visible */
-  visible: boolean;
-  /** Layer for z-sorting: 1=ghost, 2=main, 3=core-adjacent */
-  layer: number;
-}
-
-// ═══════════════════════════════════════════════════════════
-// MAIN COMPONENT
-// ═══════════════════════════════════════════════════════════
-export default function ShoggothCanvas() {
+export default function ShoggothCanvasV2() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const mouseRef = useRef<Pt>({ x: -9999, y: -9999 });
-  const scrollRef = useRef(0);
-  const targetsRef = useRef<TargetEl[]>([]);
-  const iconsRef = useRef<IconDef[]>([]);
-  const tendrilsRef = useRef<TendrilChain[]>([]);
-  const particlesRef = useRef<Particle[]>([]);
-  const lastTargetsCheck = useRef(0);
 
-  // ── Build tendrils once ───────────────────────────────
-  const buildTendrils = useCallback(
-    (corePos: Pt, _targets: TargetEl[]): TendrilChain[] => {
-      // Map target elements to tendril configs
-      const targetMap = new Map(_targets.map(t => [t.id, t]));
-
-      // Primary tendrils: one per target icon
-      const primaryTendrils: TendrilChain[] = [];
-
-      for (const target of _targets) {
-        if (!target.iconKey) continue;
-
-        const dx = target.center.x - corePos.x;
-        const dy = target.center.y - corePos.y;
-        const dLen = Math.sqrt(dx * dx + dy * dy);
-        if (dLen < 30) continue; // too close
-
-        const numSeg = Math.max(15, Math.min(40, Math.floor(dLen / 25)));
-        const segs = [];
-        for (let i = 0; i < numSeg; i++) {
-          const t = i / (numSeg - 1);
-          const sx = lerp(corePos.x, target.center.x, t);
-          const sy = lerp(corePos.y, target.center.y, t);
-          segs.push({ pos: { x: sx, y: sy }, target: { x: sx, y: sy }, idx: i });
-        }
-
-        const isGhost = hsh(target.center.x, target.center.y, 99) > 0.6;
-        const isCore = hsh(target.center.x, target.center.y, 77) < 0.3;
-
-        primaryTendrils.push({
-          origin: { ...corePos },
-          targetId: target.id,
-          segments: segs,
-          count: numSeg,
-          cellSize: isGhost ? 24 : isCore ? 12 : 15,
-          palette: isGhost ? P.wisp : isCore ? P.mid : P.tendril,
-          maxAlpha: isGhost ? 0.03 : isCore ? 0.15 : 0.10,
-          waveFreq: 0.08 + hsh(target.center.x, 0, 0) * 0.08,
-          waveAmp: isGhost ? 25 : isCore ? 8 : 14,
-          // Very slow damping for heavy movement
-          damping: isGhost ? 0.02 : isCore ? 0.08 : 0.05,
-          noiseSeed: hsh(target.center.x, target.center.y, 42) * 10000,
-          visible: true,
-          layer: isGhost ? 1 : isCore ? 3 : 2,
-        });
-      }
-
-      // Ambient tendrils (don't connect to targets, just reach into space)
-      const ambientAngles = [-2.8, -2.2, -1.6, -1.0, -0.4, 0.2, 0.8, 1.4, 2.0, 2.6];
-      for (let ai = 0; ai < ambientAngles.length; ai++) {
-        const angle = ambientAngles[ai];
-        const len = 300 + hsh(ai, 50, 0) * 200;
-        const numSeg = Math.floor(len / 18);
-        const segs = [];
-        for (let i = 0; i < numSeg; i++) {
-          const t = i / (numSeg - 1);
-          const d = t * len;
-          segs.push({
-            pos: { x: corePos.x + Math.cos(angle) * d, y: corePos.y + Math.sin(angle) * d },
-            target: { x: corePos.x + Math.cos(angle) * d, y: corePos.y + Math.sin(angle) * d },
-            idx: i,
-          });
-        }
-        primaryTendrils.push({
-          origin: { ...corePos },
-          targetId: null,
-          segments: segs,
-          count: numSeg,
-          cellSize: 26,
-          palette: P.wisp,
-          maxAlpha: 0.025,
-          waveFreq: 0.06 + ai * 0.02,
-          waveAmp: 20 + ai * 3,
-          damping: 0.015,
-          noiseSeed: ai * 5000,
-          visible: true,
-          layer: 1,
-        });
-      }
-
-      return primaryTendrils;
-    },
-    []
-  );
-
-  // ── Build particles ───────────────────────────────────
-  const buildParticles = useCallback((corePos: Pt): Particle[] => {
-    const parts: Particle[] = [];
-    for (let i = 0; i < 80; i++) {
-      const angle = hsh(i, 0, 0) * Math.PI * 2;
-      const baseDist = 120 + hsh(i, 1, 0) * 200;
-      parts.push({
-        pos: {
-          x: corePos.x + Math.cos(angle) * baseDist,
-          y: corePos.y + Math.sin(angle) * baseDist,
-        },
-        vel: { x: 0, y: 0 },
-        life: hsh(i, 2, 0) * 200,
-        maxLife: 150 + hsh(i, 3, 0) * 200,
-        ch: pickChar(P.wisp, i, 0, 0),
-        alpha: 0.02 + hsh(i, 4, 0) * 0.03,
-        size: 8 + hsh(i, 5, 0) * 4,
-      });
-    }
-    return parts;
-  }, []);
-
-  // ── Query DOM targets ────────────────────────────────
-  const updateTargets = useCallback(() => {
-    const els = document.querySelectorAll<HTMLElement>("[data-shoggoth]");
-    const scrollY = scrollRef.current;
-    const newTargets: TargetEl[] = [];
-
-    for (let i = 0; i < els.length; i++) {
-      const el = els[i];
-      const id = el.getAttribute("data-shoggoth");
-      if (!id) continue;
-      const rect = el.getBoundingClientRect();
-      const iconKey = SECTION_ICONS[id] || null;
-      // Skip elements not near viewport (more than 2 viewports below)
-      if (rect.top > window.innerHeight * 2.5) continue;
-      // Skip elements far above (more than 1 viewport above)
-      if (rect.bottom < -window.innerHeight) continue;
-
-      newTargets.push({
-        id,
-        rect,
-        center: {
-          x: rect.left + rect.width / 2,
-          y: rect.top + scrollY + rect.height / 2,
-        },
-        iconKey,
-      });
-    }
-
-    targetsRef.current = newTargets;
-
-    // Build icons
-    const icons: IconDef[] = [];
-    for (const target of newTargets) {
-      if (!target.iconKey) continue;
-      icons.push({
-        key: target.iconKey,
-        id: target.id,
-        screenPos: {
-          x: target.rect.left + target.rect.width / 2,
-          y: target.rect.top + target.rect.height / 2,
-        },
-        visible: true,
-        charTimer: 0,
-        chars: [],
-      });
-    }
-    iconsRef.current = icons;
-  }, []);
-
-  // ── Mouse tracking ───────────────────────────────────
-  useEffect(() => {
-    const onMove = (e: MouseEvent) => {
-      mouseRef.current = { x: e.clientX, y: e.clientY + scrollRef.current };
-    };
-    const onScroll = () => { scrollRef.current = window.scrollY; };
-    window.addEventListener("mousemove", onMove, { passive: true });
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("scroll", onScroll);
-    };
-  }, []);
-
-  // ── Main effect ──────────────────────────────────────
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    let raf = 0;
+    // State
+    const mouse = { x: -9999, y: -9999 };
+    let scrollY = window.scrollY;
+    let animId = 0;
     let t = 0;
-    let corePos = { x: 0, y: 0 };
-    let coreRCells = 0;
-    let coreBreath = 0;
-    let hasInit = false;
+    const CELL = 10;
 
+    // Core stays at FIXED viewport position
+    const coreNormX = 0.56; // 56% from left
+    const coreNormY = 0.17; // 17% from top
+
+    // Tentacle configs - angles in radians (0=right, π/2=down)
+    // All pointing DOWN into page sections
+    const tentCfg = [
+      { ang: 0.95, len: 600, alpha: 0.30 },
+      { ang: 1.15, len: 550, alpha: 0.27 },
+      { ang: 1.35, len: 500, alpha: 0.24 },
+      { ang: 1.57, len: 450, alpha: 0.20 }, // π/2 = straight down
+      { ang: 1.75, len: 500, alpha: 0.17 },
+      { ang: 2.0,  len: 580, alpha: 0.24 },
+    ];
+    const TENT_SEGS = 25;
+
+    // Ghost tendrils (faint, all directions)
+    const NUM_GHOSTS = 12;
+    const GHOST_SEGS = 18;
+
+    // Dust
+    const NUM_DUST = 50;
+
+    // Data structures
+    interface Seg { x: number; y: number; }
+    const tentacles: Seg[][] = [];
+    const ghosts: Seg[][] = [];
+    const dust: Array<{ x: number; y: number; vx: number; vy: number; life: number; maxLife: number }> = [];
+
+    // ── Initialize everything ──
+    const buildAll = () => {
+      const W = window.innerWidth;
+      const H = window.innerHeight;
+      const cx = W * coreNormX;
+      const cy = H * coreNormY;
+
+      // Tentacles
+      tentacles.length = 0;
+      for (let ti = 0; ti < tentCfg.length; ti++) {
+        const segs: Seg[] = [];
+        const { ang, len } = tentCfg[ti];
+        for (let i = 0; i < TENT_SEGS; i++) {
+          const prog = i / (TENT_SEGS - 1);
+          const d = prog * len;
+          const perp = ang + Math.PI / 2;
+          const wave = Math.sin(i * 0.15) * 5;
+          segs.push({
+            x: cx + Math.cos(ang) * d + Math.cos(perp) * wave,
+            y: cy + Math.sin(ang) * d + Math.sin(perp) * wave,
+          });
+        }
+        tentacles.push(segs);
+      }
+
+      // Ghost tendrils
+      ghosts.length = 0;
+      for (let gi = 0; gi < NUM_GHOSTS; gi++) {
+        const segs: Seg[] = [];
+        const ang = (gi / NUM_GHOSTS) * Math.PI * 2 - Math.PI * 0.2;
+        const len = 250 + hsh(gi, 50, 0) * 200;
+        for (let i = 0; i < GHOST_SEGS; i++) {
+          const prog = i / (GHOST_SEGS - 1);
+          segs.push({
+            x: cx + Math.cos(ang) * prog * len,
+            y: cy + Math.sin(ang) * prog * len,
+          });
+        }
+        ghosts.push(segs);
+      }
+
+      // Dust
+      dust.length = 0;
+      for (let i = 0; i < NUM_DUST; i++) {
+        const ang = hsh(i, 0, 0) * Math.PI * 2;
+        const dist = 100 + hsh(i, 1, 0) * 180;
+        dust.push({
+          x: cx + Math.cos(ang) * dist,
+          y: cy + Math.sin(ang) * dist,
+          vx: 0, vy: 0,
+          life: hsh(i, 2, 0) * 80,
+          maxLife: 80 + hsh(i, 3, 0) * 150,
+        });
+      }
+    };
+
+    // Resize
     const resize = () => {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
-      if (!hasInit) {
-        // Initial core position: 58% from left, 38% from top of viewport
-        corePos = {
-          x: canvas.width * 0.58,
-          y: canvas.height * 0.25,
-        };
-        coreRCells = 16;
-        hasInit = true;
-      }
+      buildAll();
     };
     resize();
     const ro = new ResizeObserver(resize);
     ro.observe(document.body);
 
-    // Initial target scan
-    updateTargets();
-    lastTargetsCheck.current = 0;
+    // Mouse + scroll
+    const onMove = (e: MouseEvent) => { mouse.x = e.clientX; mouse.y = e.clientY + scrollY; };
+    const onScroll = () => { scrollY = window.scrollY; };
+    window.addEventListener("mousemove", onMove, { passive: true });
+    window.addEventListener("scroll", onScroll, { passive: true });
 
-    // Build tendrils and particles
-    tendrilsRef.current = buildTendrils(corePos, []);
-    particlesRef.current = buildParticles(corePos);
-
-    // ═════════════════════════════════════════════
-    //  MAIN RENDER LOOP
-    // ═════════════════════════════════════════════
+    // ── RENDER LOOP ──
     const render = () => {
-      const W = canvas.width;
-      const H = canvas.height;
-      if (W === 0 || H === 0) { raf = requestAnimationFrame(render); return; }
+      animId = requestAnimationFrame(render);
 
       t += 1 / 60;
-      const scrollY = scrollRef.current;
-      const coreScreenX = corePos.x;
-      const coreScreenY = corePos.y;
-      const mouse = mouseRef.current;
-      const mDist = dist(mouse, { x: coreScreenX, y: coreScreenY + scrollY });
-      const mInfluence = mouse.x > -999 ? Math.max(0, 1 - mDist / 800) : 0;
+      const W = canvas.width;
+      const H = canvas.height;
+      if (W === 0 || H === 0) return;
 
-      // ─── Core breathing (SLOW: 0.06 Hz = 16 second cycle) ───
-      const b1 = Math.sin(t * 0.38) * 2.0;    // 16s cycle
-      const b2 = Math.sin(t * 0.63 + 0.8) * 1.2; // 10s cycle
-      const b3 = Math.sin(t * 1.0 + 1.5) * 0.5;  // 6s cycle
-      coreBreath = b1 + b2 + b3;
-      coreRCells = 16 + coreBreath * 0.5 + mInfluence * 4;
+      const cx = W * coreNormX;
+      const cy = H * coreNormY;
+      const mDist = Math.hypot(mouse.x - cx, mouse.y - cy);
+      const mInf = Math.max(0, 1 - mDist / 600);
 
-      // Core drift toward mouse (very slow, heavy)
-      const coreDriftSpeed = 0.002 * mInfluence;
-      corePos.x = lerp(corePos.x, corePos.x + (mouse.x - corePos.x) * coreDriftSpeed, 0.01);
-      corePos.y = lerp(corePos.y, corePos.y + (mouse.y - scrollY - corePos.y) * coreDriftSpeed, 0.01);
+      // ── Dark background ──
+      ctx.fillStyle = "#0c0c0c";
+      ctx.fillRect(0, 0, W, H);
 
-      // ─── Scan for DOM targets (every 500ms) ───
-      if (t - lastTargetsCheck.current > 0.5) {
-        lastTargetsCheck.current = t;
-        updateTargets();
-      }
+      // ── Core breathing ──
+      const breathe = Math.sin(t * 0.37) * 1.5 + Math.sin(t * 0.6 + 0.8) * 0.9 + Math.sin(t * 1.0 + 1.8) * 0.35;
+      const coreR = 20 + breathe * 0.5 + mInf * 3;
 
-      // Target positions for tendril routing
-      const targetPositions = targetsRef.current;
-      // Map target ids to their screen positions
-      const targetMap = new Map<string, Pt>();
-      for (const tgt of targetPositions) {
-        targetMap.set(tgt.id, { x: tgt.center.x, y: tgt.center.y });
-      }
+      ctx.textBaseline = "top";
+      const csCX = Math.floor(cx / CELL) * CELL;
+      const csCY = Math.floor(cy / CELL) * CELL;
+      const coreSeed = Math.floor(t * 0.4);
 
-      // ─── Update tendril physics ───────────────────────
-      for (const tr of tendrilsRef.current) {
-        // If target element moved, update origin
-        if (tr.targetId && targetMap.has(tr.targetId)) {
-          const tgt = targetMap.get(tr.targetId)!;
-          // Check visibility
-          tr.visible = true;
-        } else if (tr.targetId) {
-          // Target element not on screen
-          tr.visible = false;
-        }
-        if (!tr.targetId) tr.visible = true; // ambient always visible
-
-        // Update segment targets
-        for (let i = 0; i < tr.segments.length; i++) {
-          const seg = tr.segments[i];
-          const progress = i / Math.max(tr.segments.length - 1, 1);
-
-          // Base target: curved path from origin to target (or ambient direction)
-          let baseX: number, baseY: number;
-          if (tr.targetId && targetMap.has(tr.targetId)) {
-            const tgtPt = targetMap.get(tr.targetId)!;
-            // Convert target to screen space
-            const tgtScreenX = tgtPt.x;
-            const tgtScreenY = tgtPt.y - scrollY;
-            baseX = lerp(coreScreenX, tgtScreenX, progress);
-            baseY = lerp(coreScreenY, tgtScreenY, progress);
-          } else {
-            const wave = Math.sin(i * 0.2 + t * tr.waveFreq * 2) * tr.waveAmp;
-            const wave2 = Math.cos(i * 0.12 + t * tr.waveFreq * 3.5 + tr.noiseSeed) * tr.waveAmp * 0.4;
-            const angle = Math.atan2(tr.segments[tr.segments.length - 1].target.y - coreScreenY, tr.segments[tr.segments.length - 1].target.x - coreScreenX);
-            const d = progress * tr.count * tr.cellSize * 0.9;
-            baseX = coreScreenX + Math.cos(angle + wave * 0.008) * d;
-            baseY = coreScreenY + Math.sin(angle + wave * 0.008) * d + wave2;
-          }
-
-          // For target-based tendrils: add wave perpendicular to path
-          if (tr.targetId && targetMap.has(tr.targetId)) {
-            const tgtPt = targetMap.get(tr.targetId)!;
-            const tgtScreenY = tgtPt.y - scrollY;
-            const dx = tgtScreenY - coreScreenY;
-            const dLen = Math.abs(dx) || 1;
-            const perpAngle = dx > 0 ? Math.PI / 2 : -Math.PI / 2;
-            const wave = Math.sin(i * 0.25 + t * tr.waveFreq * 2 + tr.noiseSeed) * tr.waveAmp;
-            const wave2 = Math.cos(i * 0.15 + t * tr.waveFreq * 3 + tr.noiseSeed * 2) * tr.waveAmp * 0.5;
-            baseX += Math.cos(perpAngle) * wave * (1 - progress * 0.3);
-            baseY += Math.sin(perpAngle) * wave * 0.2 + wave2 * (1 - progress * 0.3);
-          }
-
-          // Mouse attraction
-          const mousePull = 150;
-          const dMouse = dist({ x: baseX, y: baseY + scrollY }, mouse);
-          if (dMouse < 350 && mouse.x > -999) {
-            const force = Math.pow(1 - dMouse / 350, 2);
-            const pull = force * mousePull * (1 - tr.damping * 15) * (1 - progress * 0.5);
-            baseX += (mouse.x - baseX) / dMouse * pull;
-            baseY += ((mouse.y - scrollY) - baseY) / dMouse * pull;
-          }
-
-          seg.target.x = baseX;
-          seg.target.y = baseY;
-
-          // Lerp toward target (SLOW: 0.02-0.08 damping)
-          seg.pos.x = lerp(seg.pos.x, baseX, tr.damping);
-          seg.pos.y = lerp(seg.pos.y, baseY, tr.damping);
-        }
-      }
-
-      // ─── Update particles ─────────────────────────────
-      for (const p of particlesRef.current) {
-        p.life++;
-        if (p.life > p.maxLife) {
-          p.life = 0;
-          const angle = hsh(p.life, 0, t) * Math.PI * 2;
-          const baseDist = 120 + hsh(p.life, 1, t) * 200;
-          p.pos.x = coreScreenX + Math.cos(angle) * baseDist;
-          p.pos.y = coreScreenY + Math.sin(angle) * baseDist + scrollY * 0;
-          p.vel.x = 0;
-          p.vel.y = 0;
-          p.ch = pickChar(P.wisp, Math.floor(t * 10 + p.life), 0, 0);
-        }
-
-        // Gentle drift
-        p.vel.x += Math.sin(t * 0.5 + p.life * 0.1) * 0.05;
-        p.vel.y += Math.cos(t * 0.3 + p.life * 0.08) * 0.03;
-        p.vel.x *= 0.98;
-        p.vel.y *= 0.98;
-        p.pos.x += p.vel.x;
-        p.pos.y += p.vel.y;
-      }
-
-      // ─── Collect all cells for rendering ──────────────
-      interface Cell {
-        x: number; y: number; ch: string; a: number; fontSize: string;
-      }
-      const cells: Cell[] = [];
-
-      // ── PHASE 1: CORE BODY ──
-      const CORE_CS = 11;
-      const cCX = Math.floor(coreScreenX / CORE_CS) * CORE_CS;
-      const cCY = Math.floor(coreScreenY / CORE_CS) * CORE_CS;
-      const cols = Math.ceil(coreRCells) + 2;
-
+      // ════════════════════════════════════════════
+      // PHASE 1: CORE BODY
+      // ════════════════════════════════════════════
+      const cols = Math.ceil(coreR) + 4;
       for (let row = -cols; row <= cols; row++) {
         for (let col = -cols; col <= cols; col++) {
-          const nd = Math.sin(col * 0.35 + t * 0.38) * 2.0 +
-                     Math.cos(row * 0.28 + t * 0.32) * 2.0 +
-                     Math.sin((col + row) * 0.2 + t * 0.55) * 1.0;
-          const eDist = Math.sqrt(col * col + row * row) + nd * 0.25;
+          const noise = Math.sin(col * 0.35 + t * 0.3) * 1.5 + Math.cos(row * 0.3 + t * 0.25) * 1.5;
+          const eDist = Math.sqrt(col * col + row * row) + noise * 0.15;
+          if (eDist > coreR) continue;
 
-          if (eDist > coreRCells + 0.5) continue;
+          const center = 1 - eDist / coreR;
+          if (center < 0.05) continue;
 
-          const centerness = clamp(1 - eDist / (coreRCells + 0.5), 0, 1);
-          const density = Math.pow(centerness, 0.7);
-          let a = density * 0.30;
+          // High alpha for dark background visibility
+          const a = Math.pow(center, 0.5) * 0.65;
+          if (a < 0.04) continue;
 
-          // Slow char change: only update every ~2 seconds
-          const charSeed = Math.floor(t / 2);
-          const pal = col * col + row * row < coreRCells * coreRCells * 0.3 ? P.core : P.mid;
-
-          if (a < 0.008) continue;
-
-          cells.push({
-            x: cCX + col * CORE_CS,
-            y: cCY + row * CORE_CS,
-            ch: pickChar(pal, col, row, charSeed),
-            a: Math.min(a, 0.60),
-            fontSize: a > 0.15 ? "bold 13px" : a > 0.08 ? "12px" : "11px",
-          });
+          ctx.fillStyle = `hsla(38, 55%, 50%, ${Math.min(a, 0.75)})`;
+          ctx.fillText(chPick(CH_CORE, col, row, coreSeed), csCX + col * CELL, csCY + row * CELL);
         }
       }
 
-      // ── PHASE 2: EYES ──
-      const eyeDefs = [
-        { offX: -2.5, offY: 1.5, r: 2.5, phase: 0, speed: 0.35 },
-        { offX: 3.0, offY: -1.0, r: 2.0, phase: Math.PI * 0.9, speed: 0.25 },
-        { offX: 0.5, offY: 3.0, r: 1.5, phase: Math.PI * 1.5, speed: 0.45 },
+      // ════════════════════════════════════════════
+      // PHASE 2: EYES
+      // ════════════════════════════════════════════
+      const eyes = [
+        { ox: -3.5, oy: 0, r: 3, speed: 0.28, phase: 0 },
+        { ox: 3.5, oy: -0.5, r: 2.5, speed: 0.2, phase: Math.PI * 0.8 },
+        { ox: 0, oy: 4, r: 2, speed: 0.35, phase: Math.PI * 1.4 },
       ];
 
-      for (const eye of eyeDefs) {
+      for (const eye of eyes) {
         const pulse = Math.sin(t * eye.speed + eye.phase) * 0.5 + 0.5;
-        const eR = eye.r * (0.6 + pulse * 0.5);
-        const eAlpha = 0.08 + pulse * 0.18;
-        const ex = cCX + Math.floor(eye.offX * CORE_CS);
-        const ey = cCY + Math.floor(eye.offY * CORE_CS);
+        const eR = eye.r * (0.7 + pulse * 0.4);
+        const ea = 0.35 + pulse * 0.3; // Max ~0.65
+        const ex = csCX + Math.floor(eye.ox * CELL);
+        const ey = csCY + Math.floor(eye.oy * CELL);
 
-        for (let dr = -Math.ceil(eR + 1); dr <= Math.ceil(eR + 1); dr++) {
-          for (let dc = -Math.ceil(eR + 1); dc <= Math.ceil(eR + 1); dc++) {
+        for (let dr = -Math.ceil(eR + 2); dr <= Math.ceil(eR + 2); dr++) {
+          for (let dc = -Math.ceil(eR + 2); dc <= Math.ceil(eR + 2); dc++) {
             const d = Math.sqrt(dc * dc + dr * dr);
-            if (d > eR + 0.8) continue;
-            const closeness = 1 - d / (eR + 0.8);
-            const a = closeness * closeness * eAlpha;
-            if (a < 0.01) continue;
-            const pal = d < eR * 0.3 ? P.eye : P.core;
-            cells.push({
-              x: ex + dc * CORE_CS,
-              y: ey + dr * CORE_CS,
-              ch: pickChar(pal, dc + Math.floor(t * 0.5), dr, Math.floor(t / 3)),
-              a: Math.min(a, 0.70),
-              fontSize: a > 0.1 ? "bold 14px" : "12px",
-            });
+            if (d > eR + 1) continue;
+            const c = 1 - d / (eR + 1);
+            const aa = c * c * ea;
+            if (aa < 0.04) continue;
+
+            const pal = d < eR * 0.35 ? CH_EYE : CH_CORE;
+            ctx.fillStyle = `hsla(42, 70%, 60%, ${Math.min(aa, 0.85)})`;
+            ctx.fillText(chPick(pal, dc + Math.floor(t * 0.3), dr, coreSeed), ex + dc * CELL, ey + dr * CELL);
           }
         }
       }
 
-      // ── PHASE 3: TENDRILS ──
-      for (const tr of tendrilsRef.current) {
-        if (!tr.visible) continue;
+      // ════════════════════════════════════════════
+      // PHASE 3: TENTACLES (6, pointing DOWN)
+      // ════════════════════════════════════════════
+      const tentFreqs = [0.05, 0.06, 0.07, 0.05, 0.07, 0.065];
+      const tentAmps = [10, 12, 14, 10, 15, 11];
+      const damping = 0.025;
 
-        for (let i = 0; i < tr.segments.length; i++) {
-          const seg = tr.segments[i];
-          const progress = i / Math.max(tr.segments.length - 1, 1);
+      for (let ti = 0; ti < tentacles.length; ti++) {
+        const segs = tentacles[ti];
+        const { ang, len, alpha: baseAlpha } = tentCfg[ti];
 
-          // Snap to cell grid
-          const gx = Math.floor(seg.pos.x / tr.cellSize) * tr.cellSize;
-          const gy = Math.floor(seg.pos.y / tr.cellSize) * tr.cellSize;
+        for (let i = 0; i < segs.length; i++) {
+          const seg = segs[i];
+          const prog = i / (segs.length - 1);
 
-          // Alpha: base * distance taper
-          const distFade = 1 - progress;
-          const a = tr.maxAlpha * Math.pow(distFade, 1.2);
+          // Target position with perpendicular wave
+          const d = prog * len;
+          const perp = ang + Math.PI / 2;
+          const wave1 = Math.sin(i * 0.18 + t * tentFreqs[ti] * 3 + ti * 5) * tentAmps[ti];
+          const wave2 = Math.cos(i * 0.11 + t * tentFreqs[ti] * 5.5 + ti * 2) * tentAmps[ti] * 0.35;
 
-          if (a < 0.002) continue;
+          let tx = cx + Math.cos(ang) * d + Math.cos(perp) * wave1;
+          let ty = cy + Math.sin(ang) * d + Math.sin(perp) * wave2;
 
-          // Character changes slowly
-          const charSeed = Math.floor(t / (1.5 + hsh(i, tr.noiseSeed, 0) * 3));
-          const ch = pickChar(tr.palette, i, Math.floor(tr.noiseSeed), charSeed);
+          // Mouse attraction
+          if (mouse.x > -9990) {
+            const dm = Math.hypot(mouse.x - tx, mouse.y - ty);
+            if (dm < 280 && dm > 1) {
+              const force = Math.pow(1 - dm / 280, 2);
+              const pull = force * 40 * (1 - prog * 0.5);
+              tx += (mouse.x - tx) / dm * pull;
+              ty += (mouse.y - ty) / dm * pull;
+            }
+          }
 
-          cells.push({
-            x: gx,
-            y: gy,
-            ch,
-            a,
-            fontSize: a > 0.08 ? "bold 13px" : a > 0.04 ? "12px" : "11px",
-          });
+          // Smooth movement
+          seg.x = seg.x + (tx - seg.x) * damping;
+          seg.y = seg.y + (ty - seg.y) * damping;
 
-          // Extra cell for thickness on mid-layer
-          if (tr.layer === 2 && i % 3 === 0) {
-            const perpAngle = Math.atan2(tr.segments[Math.min(i + 1, tr.segments.length - 1)].pos.y - seg.pos.y,
-                                          tr.segments[Math.min(i + 1, tr.segments.length - 1)].pos.x - seg.pos.x) + Math.PI / 2;
-            const thick = Math.sin(i * 0.4 + t * 0.15) * 0.4;
-            const ox = Math.floor((seg.pos.x + Math.cos(perpAngle) * thick * tr.cellSize * 0.4) / tr.cellSize) * tr.cellSize;
-            const oy = Math.floor((seg.pos.y + Math.sin(perpAngle) * thick * tr.cellSize * 0.4) / tr.cellSize) * tr.cellSize;
+          // Viewport culling (screen-relative)
+          if (seg.y < -60 || seg.y > H + 60) continue;
+
+          // Alpha with fade
+          const fade = Math.pow(1 - prog, 1.3);
+          const a = baseAlpha * fade;
+          if (a < 0.015) continue;
+
+          const cs = Math.floor(t / 2.5 + i * 10 + ti * 100);
+          ctx.fillStyle = `hsla(38, 48%, 46%, ${Math.min(a, 0.6)})`;
+          ctx.fillText(chPick(CH_TENDRIL, i, ti, cs), seg.x, seg.y);
+
+          // Thickness
+          if (i % 4 === 0 && i < segs.length - 1) {
+            const pa = Math.atan2(segs[Math.min(i + 1, segs.length - 1)].y - seg.y, segs[Math.min(i + 1, segs.length - 1)].x - seg.x) + Math.PI / 2;
+            const thick = Math.sin(i * 0.3 + t * 0.1) * 0.35;
             const a2 = a * 0.4;
-            if (a2 > 0.002) {
-              cells.push({ x: ox, y: oy, ch: pickChar(tr.palette, i + 1, Math.floor(tr.noiseSeed), charSeed), a: a2, fontSize: "10px" });
+            if (a2 > 0.02) {
+              ctx.fillStyle = `hsla(38, 40%, 42%, ${Math.min(a2, 0.4)})`;
+              ctx.fillText(chPick(CH_TENDRIL, i + 1, ti + 50, cs),
+                seg.x + Math.cos(pa) * thick * 3, seg.y + Math.sin(pa) * thick * 3);
             }
           }
         }
       }
 
-      // ── PHASE 4: ICONS AT TERMINATIONS ──
-      const iconGrid = iconsRef.current;
-      for (const icon of iconGrid) {
-        if (!icon.visible) continue;
-        // Check if icon is visible on screen
-        if (icon.screenPos.y < scrollY - 100 || icon.screenPos.y > scrollY + H + 100) continue;
+      // ════════════════════════════════════════════
+      // PHASE 4: GHOST TENTACLES
+      // ════════════════════════════════════════════
+      for (let gi = 0; gi < ghosts.length; gi++) {
+        const segs = ghosts[gi];
+        const baseAngle = (gi / NUM_GHOSTS) * Math.PI * 2 - Math.PI * 0.2;
+        const len = 250 + hsh(gi, 50, 0) * 200;
 
-        const screenY = icon.screenPos.y - scrollY;
-        const gridData = ICONS[icon.key as keyof typeof ICONS];
-        if (!gridData) continue;
+        for (let i = 0; i < segs.length; i++) {
+          const seg = segs[i];
+          const prog = i / (segs.length - 1);
+          const baseDist = prog * len;
+          const wave = Math.sin(i * 0.12 + t * 0.04 + gi * 3) * 6;
+          const perp = baseAngle + Math.PI / 2;
 
-        const cellW = 9;  // icon cell size
-        const cellH = 12;
-        const iconW = gridData[0]?.length || 0;
-        const iconH = gridData.length;
-        const iconX = icon.screenPos.x - (iconW * cellW) / 2;
-        const iconY = screenY - (iconH * cellH) / 2;
+          const tx = cx + Math.cos(baseAngle) * baseDist + Math.cos(perp) * wave;
+          const ty = cy + Math.sin(baseAngle) * baseDist + Math.sin(perp) * wave;
 
-        // Icon pulse
-        const iconAlpha = 0.12 + Math.sin(t * 0.8 + hsh(icon.screenPos.x, icon.screenPos.y, 0)) * 0.08;
+          seg.x += (tx - seg.x) * 0.012;
+          seg.y += (ty - seg.y) * 0.012;
 
-        // Slow character morphing
-        icon.charTimer++;
-        const morphTime = icon.charTimer % 120 < 60 ? 0 : 1;
+          if (seg.y < -40 || seg.y > H + 40) continue;
 
-        for (let r = 0; r < iconH; r++) {
-          const line = gridData[r];
-          for (let c = 0; c < line.length; c++) {
-            const ch = line[c];
-            if (ch === ' ' || ch === '│') continue; // skip background chars
+          const fade = Math.pow(1 - prog, 1.1);
+          const a = 0.08 * fade;
+          if (a < 0.008) continue;
 
-            const cellAlpha = iconAlpha * (ch === '░' ? 0.6 : ch === '▓' ? 0.8 : 1.0);
-            if (cellAlpha < 0.01) continue;
-
-            // For icon cells with placeholders, use palette characters
-            let renderCh = ch;
-            if (ch === '░' || ch === '▓' || ch === '#') {
-              renderCh = pickChar(P.core, c + morphTime * 10, r + morphTime * 10, Math.floor(t / 3));
-            }
-
-            cells.push({
-              x: Math.floor((iconX + c * cellW) / cellW) * cellW,
-              y: Math.floor((iconY + r * cellH) / cellH) * cellH,
-              ch: renderCh,
-              a: cellAlpha,
-              fontSize: `bold ${cellH - 1}px`,
-            });
-          }
+          const cs = Math.floor(t / 3 + i + gi * 100);
+          ctx.fillStyle = `hsla(38, 30%, 42%, ${Math.min(a * 2, 0.25)})`;
+          ctx.fillText(chPick(CH_WISP, i, gi, cs), seg.x, seg.y);
         }
       }
 
-      // ── PHASE 5: AMBIENT PARTICLES ──
-      for (const p of particlesRef.current) {
-        const screenY = p.pos.y;
-        if (screenY < scrollY - 50 || screenY > scrollY + H + 50) continue;
+      // ════════════════════════════════════════════
+      // PHASE 5: DUST
+      // ════════════════════════════════════════════
+      for (const d of dust) {
+        d.life++;
+        if (d.life > d.maxLife) {
+          d.life = 0;
+          d.x = cx; d.y = cy;
+          const angle = hsh(d.life, 0, t) * Math.PI * 2;
+          const speed = 3 + hsh(d.life, 1, t) * 15;
+          d.vx = Math.cos(angle) * speed;
+          d.vy = Math.sin(angle) * speed;
+        }
+        d.vx += Math.sin(t * 0.35 + d.life * 0.04) * 0.015;
+        d.vy += Math.cos(t * 0.25 + d.life * 0.03) * 0.01 + 0.003;
+        d.vx *= 0.97; d.vy *= 0.97;
+        d.x += d.vx; d.y += d.vy;
 
-        const lifeFade = 1 - p.life / p.maxLife;
-        const a = p.alpha * lifeFade;
-        if (a < 0.003) continue;
+        if (d.y < -30 || d.y > H + 30) continue;
+        if (d.life / d.maxLife > 0.8) continue;
 
-        cells.push({
-          x: Math.floor(p.pos.x / p.size) * p.size,
-          y: Math.floor(screenY / p.size) * p.size,
-          ch: p.ch,
-          a,
-          fontSize: `${Math.max(p.size - 2, 6)}px`,
-        });
+        const a = 0.05 * (1 - d.life / d.maxLife);
+        if (a < 0.005) continue;
+
+        ctx.fillStyle = `hsla(38, 28%, 40%, ${Math.min(a * 2, 0.12)})`;
+        ctx.fillText(chPick(CH_WISP, Math.floor(d.life), 0, Math.floor(t / 3)), d.x, d.y);
       }
 
-      // ── PHASE 6: GHOST TENDRILS (very faint, very long) ──
-      const ghostCount = 8;
-      for (let gi = 0; gi < ghostCount; gi++) {
-        const ghostAngle = (gi / ghostCount) * Math.PI * 2 - Math.PI * 0.5;
-        const ghostLen = 800 + hsh(gi, 20, 0) * 400;
-        const ghostSegs = 25;
-
-        for (let s = 0; s < ghostSegs; s++) {
-          const progress = s / ghostSegs;
-          const d = progress * ghostLen;
-          const wave = Math.sin(s * 0.3 + t * 0.06) * 5;
-          const angle = ghostAngle + wave * 0.004;
-          const gx = Math.floor((coreScreenX + Math.cos(angle) * d) / 28) * 28;
-          const gy = Math.floor((coreScreenY + Math.sin(angle) * d) / 28) * 28;
-          const screenYCheck = coreScreenY + Math.sin(angle) * d;
-          if (screenYCheck < scrollY - 50 || screenYCheck > scrollY + H + 50) continue;
-          const a = 0.012 * (1 - progress);
-          if (a < 0.002) continue;
-
-          cells.push({
-            x: gx,
-            y: gy,
-            ch: pickChar(P.wisp, s + gi * 15, gi, Math.floor(t / 5)),
-            a,
-            fontSize: "10px",
-          });
-        }
-      }
-
-      // ═════════════════════════════════════════════
-      //  RENDER ALL CELLS
-      // ═════════════════════════════════════════════
-
-      // Clear
-      ctx.clearRect(0, 0, W, H);
-
-      // Sort cells back-to-front by alpha for proper depth layering
-      cells.sort((a, b) => a.a - b.a);
-
-      // BATCH by font size to minimize ctx.font changes
-      ctx.textBaseline = "top";
-      let currentFont = "";
-      let currentColor = "";
-
-      for (let ci = 0; ci < cells.length; ci++) {
-        const c = cells[ci];
-        const hue = 38 + c.a * 10;
-        const sat = 50 + c.a * 35;
-        const light = 35 + c.a * 30;
-        const color = `hsla(${hue}, ${sat}%, ${light}%, ${Math.min(c.a * 1.8, 0.65)})`;
-        const font = `${c.fontSize} "IBM Plex Mono", monospace`;
-
-        if (font !== currentFont) {
-          ctx.font = font;
-          currentFont = font;
-        }
-        if (color !== currentColor) {
-          ctx.fillStyle = color;
-          currentColor = color;
-        }
-        ctx.fillText(c.ch, c.x, c.y);
-      }
-
-      // Subtle radial glow behind core (very slow pulse)
-      const glowR = coreRCells * CORE_CS * 2.5;
-      const grad = ctx.createRadialGradient(coreScreenX, coreScreenY, 0, coreScreenX, coreScreenY, glowR);
-      const glowA = 0.04 + Math.sin(t * 0.25) * 0.02;
-      grad.addColorStop(0, `rgba(212, 160, 60, ${glowA})`);
-      grad.addColorStop(0.5, `rgba(212, 160, 60, ${glowA * 0.4})`);
+      // ════════════════════════════════════════════
+      // PHASE 6: GLOW
+      // ════════════════════════════════════════════
+      const glowR = coreR * CELL * 2.5;
+      const ga = 0.05 + Math.sin(t * 0.18) * 0.03;
+      const grad = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowR);
+      grad.addColorStop(0, `rgba(212, 160, 60, ${ga})`);
+      grad.addColorStop(0.5, `rgba(212, 160, 60, ${ga * 0.4})`);
       grad.addColorStop(1, "rgba(212, 160, 60, 0)");
       ctx.fillStyle = grad;
       ctx.fillRect(0, 0, W, H);
-
-      raf = requestAnimationFrame(render);
     };
 
-    raf = requestAnimationFrame(render);
+    animId = requestAnimationFrame(render);
 
     return () => {
-      cancelAnimationFrame(raf);
+      cancelAnimationFrame(animId);
       ro.disconnect();
+      window.removeEventListener("mousemove", onMove);
+      window.removeEventListener("scroll", onScroll);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [buildTendrils, buildParticles, updateTargets]);
+  }, []);
 
   return (
     <canvas
@@ -865,8 +385,7 @@ export default function ShoggothCanvas() {
         left: 0,
         width: "100vw",
         height: "100vh",
-        zIndex: 1,
-        imageRendering: "auto",
+        zIndex: 0,
       }}
     />
   );
